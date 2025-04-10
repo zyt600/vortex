@@ -2,9 +2,8 @@
 #define _COMMON_H_
 
 #ifndef TYPE
-#define TYPE float
+#define TYPE int8_t
 #endif
-
 
 typedef struct {
   uint32_t grid_dim[2];
