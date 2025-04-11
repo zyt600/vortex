@@ -1,2 +1,0 @@
-main.o: /vortex/tests/regression/dot8/main.cpp \
- /vortex/runtime/include/vortex.h /vortex/tests/regression/dot8/common.h
