@@ -1430,6 +1430,43 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
         std::abort();
       }
     } break;
+    case 1: {
+      switch (func3) {
+      case 0: { // DOT8
+        trace->fu_type = FUType::ALU;
+        trace->alu_type = AluType::DOT8;
+        // TODOOOO
+        trace->src_regs[0] = {RegType::Integer, rsrc0};
+        trace->src_regs[1] = {RegType::Integer, rsrc1};
+        
+        for (uint32_t t = thread_start; t < num_threads; ++t) {
+          if (!warp.tmask.test(t))
+            continue;
+          
+          //TODOOOO
+          // Extract int8 values from 32-bit registers
+          int8_t a1 = (rsdata[t][0].i >> 0) & 0xFF;
+          int8_t a2 = (rsdata[t][0].i >> 8) & 0xFF;
+          int8_t a3 = (rsdata[t][0].i >> 16) & 0xFF;
+          int8_t a4 = (rsdata[t][0].i >> 24) & 0xFF;
+          
+          int8_t b1 = (rsdata[t][1].i >> 0) & 0xFF;
+          int8_t b2 = (rsdata[t][1].i >> 8) & 0xFF;
+          int8_t b3 = (rsdata[t][1].i >> 16) & 0xFF;
+          int8_t b4 = (rsdata[t][1].i >> 24) & 0xFF;
+          
+          // Calculate dot product
+          int32_t result = (a1 * b1) + (a2 * b2) + (a3 * b3) + (a4 * b4);
+          
+          rddata[t].i = result;
+          //end TODO
+        }
+        rd_write = true;
+      } break;
+      default:
+        std::abort();
+      }
+    } break;
     default:
       std::abort();
     }
