@@ -1438,22 +1438,7 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
         // TODOOOO
         trace->src_regs[0] = {RegType::Integer, rsrc0};
         trace->src_regs[1] = {RegType::Integer, rsrc1};
-        FILE* fp = fopen("zytlog.txt", "a");
-        if (fp != NULL) {
-            fprintf(fp, "eeeeeeeexecute func called\n");
-            fclose(fp);
-        }
-        // FILE* fp2 = fopen("zytlog2.txt", "a");
-        // if (fp2 != NULL) {
-        //     fprintf(fp2, "22222222eeeeeeeexecute func called\n");
-        //     fclose(fp2);
-        // }
-        // std::ofstream logfileOut1("/vortex/build/zytlog.txt", std::ios::app);
-        // std::ofstream logfileOut2("zytlog.txt", std::ios::app);
-        // logfileOut1 << "eeeeeeeexecute func called" << std::endl;
-        // logfileOut2 << "22222222eeeeeeeexecute func called" << std::endl;
-        // logfileOut1.close();
-        // logfileOut2.close();
+        
         for (uint32_t t = thread_start; t < num_threads; ++t) {
           if (!warp.tmask.test(t))
             continue;
