@@ -13,7 +13,7 @@ void kernel_body(kernel_arg_t* __UNIFORM__ arg) {
     TYPE sum(0);
     for (int e = 0; e < size; ++e) {
         sum += A[row * size + e] * B[e * size + col];
-    }
+}
 
     C[row * size + col] = sum;
 }

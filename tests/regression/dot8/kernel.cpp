@@ -12,11 +12,11 @@ void kernel_body(kernel_arg_t* __UNIFORM__ arg) {
 
     int sum(0);
     for (int e = 0; e < matrix_width; e+=4) {
-        int packedA = *((int*) (A + row * matrix_width + e));
-        int packedB = *((int*) (B + e * matrix_width + col)) |
-                      (*((int*) (B + (e+1)*matrix_width + col))) << 8 |
-                      (*((int*) (B + (e+2)*matrix_width + col))) << 16 |
-                      (*((int*) (B + (e+3)*matrix_width + col))) << 24;
+        uint32_t packedA = *((uint32_t*) (A + row * matrix_width + e));
+        uint32_t packedB = *((uint8_t*) (B + e * matrix_width + col)) |
+                      (*((uint8_t*) (B + (e+1)*matrix_width + col))) << 8 |
+                      (*((uint8_t*) (B + (e+2)*matrix_width + col))) << 16 |
+                      (*((uint8_t*) (B + (e+3)*matrix_width + col))) << 24;
 
         sum += vx_dot8(packedA, packedB);
     }
