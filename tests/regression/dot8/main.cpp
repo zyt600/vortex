@@ -52,7 +52,7 @@ public:
     return "int8_t";
   }
   static int8_t generate() {
-    return rand() % 127;
+    return rand() % 256 - 128;
   }
   static bool compare(int8_t a, int8_t b, int index, int errors) {
     if (a != b) {
@@ -149,11 +149,11 @@ int main(int argc, char *argv[]) {
 
   // allocate device memory
   std::cout << "allocate device memory" << std::endl;
-  RT_CHECK(vx_mem_alloc(device, A_buf_size, 0, &A_buffer));  // VX_MEM_READ = 0
+  RT_CHECK(vx_mem_alloc(device, A_buf_size, VX_MEM_READ, &A_buffer));
   RT_CHECK(vx_mem_address(A_buffer, &kernel_arg.A_addr));
-  RT_CHECK(vx_mem_alloc(device, B_buf_size, 0, &B_buffer));  // VX_MEM_READ = 0
+  RT_CHECK(vx_mem_alloc(device, B_buf_size, VX_MEM_READ, &B_buffer));
   RT_CHECK(vx_mem_address(B_buffer, &kernel_arg.B_addr));
-  RT_CHECK(vx_mem_alloc(device, C_buf_size, 1, &C_buffer));  // VX_MEM_WRITE = 1
+  RT_CHECK(vx_mem_alloc(device, C_buf_size, VX_MEM_WRITE, &C_buffer));
   RT_CHECK(vx_mem_address(C_buffer, &kernel_arg.C_addr));
 
   std::cout << "A_addr=0x" << std::hex << kernel_arg.A_addr << std::endl;
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
   {
     std::vector<int32_t> h_ref(size_sq);
     matmul_cpu(h_ref.data(), h_A.data(), h_B.data(), size, size);
-
+    
     for (uint32_t i = 0; i < h_ref.size(); ++i) {
       if (!Comparator<int32_t>::compare(h_C[i], h_ref[i], i, errors)) {
         ++errors;

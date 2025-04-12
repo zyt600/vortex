@@ -242,7 +242,11 @@ inline void vx_matrix_mul()
 // DOT8
 inline int vx_dot8(int a, int b) {
   size_t ret;
-  asm volatile (".insn r ?, ?, ?, ?, ?, ?" : "=r"(?) : "i"(?), "r"(?), "r"(?));
+  asm volatile(
+    ".insn r 0x0B, 0x0, 0x01, %0, %1, %2"
+     : "=r"(ret)
+  : "r"(a), "r"(b)
+  );
   return ret;
 }
 

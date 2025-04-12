@@ -1438,22 +1438,37 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
         // TODOOOO
         trace->src_regs[0] = {RegType::Integer, rsrc0};
         trace->src_regs[1] = {RegType::Integer, rsrc1};
-        
+        FILE* fp = fopen("zytlog.txt", "a");
+        if (fp != NULL) {
+            fprintf(fp, "eeeeeeeexecute func called\n");
+            fclose(fp);
+        }
+        // FILE* fp2 = fopen("zytlog2.txt", "a");
+        // if (fp2 != NULL) {
+        //     fprintf(fp2, "22222222eeeeeeeexecute func called\n");
+        //     fclose(fp2);
+        // }
+        // std::ofstream logfileOut1("/vortex/build/zytlog.txt", std::ios::app);
+        // std::ofstream logfileOut2("zytlog.txt", std::ios::app);
+        // logfileOut1 << "eeeeeeeexecute func called" << std::endl;
+        // logfileOut2 << "22222222eeeeeeeexecute func called" << std::endl;
+        // logfileOut1.close();
+        // logfileOut2.close();
         for (uint32_t t = thread_start; t < num_threads; ++t) {
           if (!warp.tmask.test(t))
             continue;
           
           //TODOOOO
           // Extract int8 values from 32-bit registers
-          int8_t a1 = (rsdata[t][0].i >> 0) & 0xFF;
-          int8_t a2 = (rsdata[t][0].i >> 8) & 0xFF;
-          int8_t a3 = (rsdata[t][0].i >> 16) & 0xFF;
-          int8_t a4 = (rsdata[t][0].i >> 24) & 0xFF;
+          int32_t a1 = (rsdata[t][0].i >> 0) & 0xFF;
+          int32_t a2 = (rsdata[t][0].i >> 8) & 0xFF;
+          int32_t a3 = (rsdata[t][0].i >> 16) & 0xFF;
+          int32_t a4 = (rsdata[t][0].i >> 24) & 0xFF;
           
-          int8_t b1 = (rsdata[t][1].i >> 0) & 0xFF;
-          int8_t b2 = (rsdata[t][1].i >> 8) & 0xFF;
-          int8_t b3 = (rsdata[t][1].i >> 16) & 0xFF;
-          int8_t b4 = (rsdata[t][1].i >> 24) & 0xFF;
+          int32_t b1 = (rsdata[t][1].i >> 0) & 0xFF;
+          int32_t b2 = (rsdata[t][1].i >> 8) & 0xFF;
+          int32_t b3 = (rsdata[t][1].i >> 16) & 0xFF;
+          int32_t b4 = (rsdata[t][1].i >> 24) & 0xFF;
           
           // Calculate dot product
           int32_t result = (a1 * b1) + (a2 * b2) + (a3 * b3) + (a4 * b4);
