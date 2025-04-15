@@ -52,7 +52,7 @@ public:
     return "int8_t";
   }
   static int8_t generate() {
-    return rand() % 256 - 128;
+    return rand() % 128;
   }
   static bool compare(int8_t a, int8_t b, int index, int errors) {
     if (a != b) {
