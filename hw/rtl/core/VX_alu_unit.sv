@@ -31,10 +31,11 @@ module VX_alu_unit #(
     localparam BLOCK_SIZE   = `NUM_ALU_BLOCKS;
     localparam NUM_LANES    = `NUM_ALU_LANES;
     localparam PARTIAL_BW   = (BLOCK_SIZE != `ISSUE_WIDTH) || (NUM_LANES != `NUM_THREADS);
-    localparam PE_COUNT     = 1 + `EXT_M_ENABLED;
+    localparam PE_COUNT     = 2 + `EXT_M_ENABLED;
     localparam PE_SEL_BITS  = `CLOG2(PE_COUNT);
     localparam PE_IDX_INT   = 0;
-    localparam PE_IDX_MDV   = PE_IDX_INT + `EXT_M_ENABLED;
+    localparam PE_IDX_DOT8  = 1;
+    localparam PE_IDX_MDV   = PE_IDX_DOT8 + `EXT_M_ENABLED;
 
     VX_execute_if #(
         .NUM_LANES (NUM_LANES)
@@ -68,7 +69,9 @@ module VX_alu_unit #(
         reg [`UP(PE_SEL_BITS)-1:0] pe_select;
         always @(*) begin
             pe_select = PE_IDX_INT;
-            if (`EXT_M_ENABLED && (per_block_execute_if[block_idx].data.op_args.alu.xtype == `ALU_TYPE_MULDIV))
+            if (per_block_execute_if[block_idx].data.op_type == `INST_ALU_DOT8) 
+                pe_select = PE_IDX_DOT8;
+            else if (`EXT_M_ENABLED && (per_block_execute_if[block_idx].data.op_args.alu.xtype == `ALU_TYPE_MULDIV))
                 pe_select = PE_IDX_MDV;
         end
 
@@ -98,6 +101,16 @@ module VX_alu_unit #(
             .execute_if (pe_execute_if[PE_IDX_INT]),
             .branch_ctl_if (branch_ctl_if[block_idx]),
             .commit_if  (pe_commit_if[PE_IDX_INT])
+        );
+
+        VX_alu_dot8 #(
+            .INSTANCE_ID (`SFORMATF(("%s-dot8%0d", INSTANCE_ID, block_idx))),
+            .NUM_LANES (NUM_LANES)
+        ) dot8_unit (
+            .clk        (clk),
+            .reset      (reset),
+            .execute_if (pe_execute_if[PE_IDX_DOT8]),
+            .commit_if  (pe_commit_if[PE_IDX_DOT8])
         );
 
     `ifdef EXT_M_ENABLE

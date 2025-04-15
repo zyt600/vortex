@@ -386,6 +386,7 @@ package VX_gpu_pkg;
                                 `INST_ALU_SLL: `TRACE(level, ("SLLW"))
                                 `INST_ALU_SRL: `TRACE(level, ("SRLW"))
                                 `INST_ALU_SRA: `TRACE(level, ("SRAW"))
+                                `INST_ALU_DOT8: `TRACE(level, ("DOT8W"))
                                 default:       `TRACE(level, ("?"))
                             endcase
                         end
@@ -419,6 +420,7 @@ package VX_gpu_pkg;
                                 `INST_ALU_AND:   `TRACE(level, ("AND"))
                                 `INST_ALU_CZEQ:  `TRACE(level, ("CZERO.EQZ"))
                                 `INST_ALU_CZNE:  `TRACE(level, ("CZERO.NEZ"))
+                                `INST_ALU_DOT8:  `TRACE(level, ("DOT8"))
                                 default:         `TRACE(level, ("?"))
                             endcase
                         end
