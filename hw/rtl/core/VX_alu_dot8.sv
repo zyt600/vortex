@@ -37,7 +37,6 @@ module VX_alu_dot8 #(
     wire [NUM_PES-1:0][2*`XLEN-1:0] pe_data_in;
     wire [NUM_PES-1:0][`XLEN-1:0] pe_data_out;
 
-    // 使用修正后的TAG_WIDTH值
     wire [TAG_WIDTH-1:0] tag_in;
     wire [TAG_WIDTH-1:0] tag_out;
     
@@ -65,7 +64,6 @@ module VX_alu_dot8 #(
         commit_if.data.eop
     } = tag_out;
 
-    // PEs time-multiplexing - 使用修正后的TAG_WIDTH
     VX_pe_serializer #(
         .NUM_LANES  (NUM_LANES),
         .NUM_PES    (NUM_PES),
@@ -90,13 +88,10 @@ module VX_alu_dot8 #(
         .ready_out  (commit_if.ready)
     );
 
-    // PEs instancing
     for (genvar i = 0; i < NUM_PES; ++i) begin : g_alus
-        // 获取输入的32位数据，包含4个int8_t元素
-        wire [31:0] a = pe_data_in[i][0 +: 32]; // 第一个操作数（rs1）
-        wire [31:0] b = pe_data_in[i][32 +: 32]; // 第二个操作数（rs2）
+        wire [31:0] a = pe_data_in[i][0 +: 32];
+        wire [31:0] b = pe_data_in[i][32 +: 32];
         
-        // 提取每个字节，并作为有符号8位整数处理
         wire signed [7:0] a0 = a[7:0];
         wire signed [7:0] a1 = a[15:8];
         wire signed [7:0] a2 = a[23:16];
@@ -107,25 +102,20 @@ module VX_alu_dot8 #(
         wire signed [7:0] b2 = b[23:16];
         wire signed [7:0] b3 = b[31:24];
         
-        // 执行四个8位整数的乘法，得到16位结果
         wire signed [15:0] p0 = a0 * b0;
         wire signed [15:0] p1 = a1 * b1;
         wire signed [15:0] p2 = a2 * b2;
         wire signed [15:0] p3 = a3 * b3;
         
-        // 将所有乘积显式扩展到32位后累加
         wire signed [31:0] p0_32 = {{16{p0[15]}}, p0};
         wire signed [31:0] p1_32 = {{16{p1[15]}}, p1};
         wire signed [31:0] p2_32 = {{16{p2[15]}}, p2};
         wire signed [31:0] p3_32 = {{16{p3[15]}}, p3};
         
-        // 累加32位结果
         wire signed [31:0] result = p0_32 + p1_32 + p2_32 + p3_32;
         
-        // 将结果扩展到XLEN（64位），保留符号
         wire [`XLEN-1:0] extended_result = {{(`XLEN-32){result[31]}}, result};
         
-        // 使用寄存器缓存结果
         VX_pipe_register #(
             .DATAW  (`XLEN),
             .RESETW (1),
