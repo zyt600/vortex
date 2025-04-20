@@ -141,6 +141,7 @@
 
 `define INST_ALU_ADD         4'b0000
 //`define INST_ALU_UNUSED    4'b0001
+`define INST_ALU_DOT8        4'b0001
 `define INST_ALU_LUI         4'b0010
 `define INST_ALU_AUIPC       4'b0011
 `define INST_ALU_SLTU        4'b0100
