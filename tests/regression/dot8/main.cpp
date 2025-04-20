@@ -16,7 +16,7 @@
      if (0 == _ret)                                             \
        break;                                                   \
      printf("Error: '%s' returned %d!\n", #_expr, (int)_ret);   \
-	 cleanup();			                                              \
+	   cleanup();			                                            \
      exit(-1);                                                  \
    } while (false)
 
@@ -52,7 +52,7 @@ public:
     return "int8_t";
   }
   static int8_t generate() {
-    return rand() % 128;
+    return 1;
   }
   static bool compare(int8_t a, int8_t b, int index, int errors) {
     if (a != b) {

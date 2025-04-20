@@ -12,6 +12,7 @@
 // limitations under the License.
 
 `include "VX_define.vh"
+`define EXT_DOT8_ENABLED 1
 
 module VX_alu_unit #(
     parameter `STRING INSTANCE_ID = ""
@@ -31,10 +32,11 @@ module VX_alu_unit #(
     localparam BLOCK_SIZE   = `NUM_ALU_BLOCKS;
     localparam NUM_LANES    = `NUM_ALU_LANES;
     localparam PARTIAL_BW   = (BLOCK_SIZE != `ISSUE_WIDTH) || (NUM_LANES != `NUM_THREADS);
-    localparam PE_COUNT     = 1 + `EXT_M_ENABLED;
+    localparam PE_COUNT     = 1 + `EXT_M_ENABLED + `EXT_DOT8_ENABLED;
     localparam PE_SEL_BITS  = `CLOG2(PE_COUNT);
     localparam PE_IDX_INT   = 0;
     localparam PE_IDX_MDV   = PE_IDX_INT + `EXT_M_ENABLED;
+    localparam PE_IDX_DOT8  = PE_IDX_MDV + `EXT_DOT8_ENABLED;
 
     VX_execute_if #(
         .NUM_LANES (NUM_LANES)
@@ -70,6 +72,8 @@ module VX_alu_unit #(
             pe_select = PE_IDX_INT;
             if (`EXT_M_ENABLED && (per_block_execute_if[block_idx].data.op_args.alu.xtype == `ALU_TYPE_MULDIV))
                 pe_select = PE_IDX_MDV;
+            if (`EXT_DOT8_ENABLED && (per_block_execute_if[block_idx].data.op_type == `INST_OP_BITS'(`INST_ALU_DOT8)))
+                pe_select = PE_IDX_DOT8;
         end
 
         VX_pe_switch #(
@@ -109,6 +113,18 @@ module VX_alu_unit #(
             .reset      (reset),
             .execute_if (pe_execute_if[PE_IDX_MDV]),
             .commit_if  (pe_commit_if[PE_IDX_MDV])
+        );
+    `endif
+
+    `ifdef EXT_DOT8_ENABLED
+        VX_alu_dot8 #(
+            .INSTANCE_ID (`SFORMATF(("%s-dot8%0d", INSTANCE_ID, block_idx))),
+            .NUM_LANES (NUM_LANES)
+        ) dot8_unit (
+            .clk        (clk),
+            .reset      (reset),
+            .execute_if (pe_execute_if[PE_IDX_DOT8]),
+            .commit_if  (pe_commit_if[PE_IDX_DOT8])
         );
     `endif
     end
