@@ -52,7 +52,7 @@ public:
     return "int8_t";
   }
   static int8_t generate() {
-    return 1;
+    return rand()%127;
   }
   static bool compare(int8_t a, int8_t b, int index, int errors) {
     if (a != b) {
@@ -166,6 +166,8 @@ int main(int argc, char *argv[]) {
   std::vector<int32_t> h_C(size_sq);
   for (uint32_t i = 0; i < size_sq; ++i) {
     h_A[i] = Comparator<int8_t>::generate();
+  }
+  for (uint32_t i = 0; i < size_sq; ++i) {
     h_B[i] = Comparator<int8_t>::generate();
   }
 
