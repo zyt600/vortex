@@ -83,29 +83,21 @@ module VX_alu_dot8 #(
 
     // PEs instancing
     for (genvar i = 0; i < NUM_PES; ++i) begin : gen_pes
-        wire [63:0] a = pe_data_in[i][0 +: 64];
-        wire [63:0] b = pe_data_in[i][64 +: 64];
+        wire [`XLEN-1:0] a = pe_data_in[i][0 +: `XLEN];
+        wire [`XLEN-1:0] b = pe_data_in[i][`XLEN +: `XLEN];
         // Extract int8 values from 32-bit registers
         wire [7:0] a1 = a[0 +: 8];
         wire [7:0] a2 = a[8 +: 8];
         wire [7:0] a3 = a[16 +: 8];
         wire [7:0] a4 = a[24 +: 8];
-        wire [7:0] a5 = a[32 +: 8];
-        wire [7:0] a6 = a[40 +: 8];
-        wire [7:0] a7 = a[48 +: 8];
-        wire [7:0] a8 = a[56 +: 8];
+
         
         wire [7:0] b1 = b[0 +: 8];
         wire [7:0] b2 = b[8 +: 8];
         wire [7:0] b3 = b[16 +: 8];
         wire [7:0] b4 = b[24 +: 8];
-        wire [7:0] b5 = b[32 +: 8];
-        wire [7:0] b6 = b[40 +: 8];
-        wire [7:0] b7 = b[48 +: 8];
-        wire [7:0] b8 = b[56 +: 8];
 
-        wire [31:0] result = (a1 * b1) + (a2 * b2) + (a3 * b3) + (a4 * b4) 
-                            + (a5 * b5) + (a6 * b6) + (a7 * b7) + (a8 * b8);
+        wire [31:0] result = (a1 * b1) + (a2 * b2) + (a3 * b3) + (a4 * b4);
         /* verilator lint_off UNUSEDSIGNAL */
         wire _unused_result = |result;
         /* verilator lint_on UNUSEDSIGNAL */
