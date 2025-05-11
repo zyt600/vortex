@@ -210,6 +210,16 @@
 `define VX_CSR_ACTIVE_WARPS             12'hCC3
 `define VX_CSR_ACTIVE_THREADS           12'hCC4     // warning! this value is also used in LLVM
 
+// ray origin
+`define VX_CSR_TRIT_RO1                 12'hCC5
+`define VX_CSR_TRIT_RO2                 12'hCC6
+`define VX_CSR_TRIT_RO3                 12'hCC7
+
+// ray direction
+`define VX_CSR_TRIT_RD1                 12'hCC8
+`define VX_CSR_TRIT_RD2                 12'hCC9
+`define VX_CSR_TRIT_RD3                 12'hCCA
+
 `define VX_CSR_NUM_THREADS              12'hFC0
 `define VX_CSR_NUM_WARPS                12'hFC1
 `define VX_CSR_NUM_CORES                12'hFC2
