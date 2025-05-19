@@ -95,17 +95,17 @@ Emulator::Emulator(const Arch &arch, const DCRS &dcrs, Core* core)
     // considered to be big enough to hold input tiles for one output tile.
     // In future versions, scratchpad size should be fixed to an appropriate value.
     , scratchpad(std::vector<Word>(32 * 32 * 32768))
-  #ifdef EXT_V_ENABLE
+  // #ifdef EXT_V_ENABLE
     , csrs_(arch.num_warps())
-  #endif
+  // #endif
 {
   std::srand(50);
 
-#ifdef EXT_V_ENABLE
+// #ifdef EXT_V_ENABLE
   for (uint32_t i = 0; i < arch_.num_warps(); ++i) {
     csrs_.at(i).resize(arch.num_threads());
   }
-#endif
+// #endif
 
   this->clear();
 }
@@ -512,6 +512,18 @@ Word Emulator::get_csr(uint32_t addr, uint32_t tid, uint32_t wid) {
   case VX_CSR_VINSTRET:
     return csrs_.at(wid).at(tid)[VX_CSR_VINSTRET];
 #endif
+  // TODOOOOOOOOOO
+  // TRIT CSRs - ray origin and direction
+  case VX_CSR_TRIT_RO1:
+  case VX_CSR_TRIT_RO2:
+  case VX_CSR_TRIT_RO3:
+  case VX_CSR_TRIT_RD1:
+  case VX_CSR_TRIT_RD2:
+  case VX_CSR_TRIT_RD3:
+  case VX_CSR_TRIT_DIST1:
+  case VX_CSR_TRIT_DIST2:
+  case VX_CSR_TRIT_DIST3:
+    return csrs_.at(wid).at(tid)[addr];
 
   case VX_CSR_MHARTID:    return (core_->id() * arch_.num_warps() + wid) * arch_.num_threads() + tid;
   case VX_CSR_THREAD_ID:  return tid;
@@ -659,6 +671,20 @@ void Emulator::set_csr(uint32_t addr, Word value, uint32_t tid, uint32_t wid) {
     break;
   case VX_CSR_VLENB: // read only, set to VLEN / 8
 #endif
+
+// TODOOOOOOOOOOO
+  // TRIT CSRs - ray origin and direction
+  case VX_CSR_TRIT_RO1:
+  case VX_CSR_TRIT_RO2:
+  case VX_CSR_TRIT_RO3:
+  case VX_CSR_TRIT_RD1:
+  case VX_CSR_TRIT_RD2:
+  case VX_CSR_TRIT_RD3:
+  case VX_CSR_TRIT_DIST1:
+  case VX_CSR_TRIT_DIST2:
+  case VX_CSR_TRIT_DIST3:
+    csrs_.at(wid).at(tid)[addr] = value;
+    break;
 
   case VX_CSR_SATP:
   #ifdef VM_ENABLE

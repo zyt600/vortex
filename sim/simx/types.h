@@ -130,7 +130,8 @@ enum class AluType {
   SYSCALL,
   IMUL,
   IDIV,
-  DOT8
+  DOT8,
+  TRIT
 };
 
 inline std::ostream &operator<<(std::ostream &os, const AluType& type) {
@@ -141,6 +142,7 @@ inline std::ostream &operator<<(std::ostream &os, const AluType& type) {
   case AluType::IMUL:    os << "IMUL"; break;
   case AluType::IDIV:    os << "IDIV"; break;
   case AluType::DOT8:    os << "DOT8"; break;
+  case AluType::TRIT:    os << "TRIT"; break;
   default: assert(false);
   }
   return os;
@@ -153,7 +155,8 @@ enum class LsuType {
   TCU_LOAD,
   STORE,
   TCU_STORE,
-  FENCE
+  FENCE,
+  RTX // TODOOOOOOO
 };
 
 enum class TCUType {
@@ -175,6 +178,7 @@ inline std::ostream &operator<<(std::ostream &os, const LsuType& type) {
   case LsuType::STORE: os << "STORE"; break;
   case LsuType::TCU_STORE: os << "TCU_STORE"; break;
   case LsuType::FENCE: os << "FENCE"; break;
+  case LsuType::RTX: os << "RTX"; break;
   default: assert(false);
   }
   return os;

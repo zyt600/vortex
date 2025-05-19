@@ -394,6 +394,13 @@ static const char* op_string(const Instr &instr) {
       default:
         std::abort();
       }
+    case 2:
+      switch (func3) {
+      case 0:  // TRIT
+        return "TRIT";
+      default:
+        std::abort();
+      }
     default:
       std::abort();
     }
@@ -589,6 +596,18 @@ std::shared_ptr<Instr> Emulator::decode(uint32_t code) const {
           instr->setDestReg(rd, RegType::Integer);
           instr->addSrcReg(rs1, RegType::Integer);
           instr->addSrcReg(rs2, RegType::Integer);
+          break;
+        default:
+          std::abort();
+        }
+        break;
+      case 2:
+        switch (func3) {
+        case 0:  // TRIT
+          // instr->setDestReg(rd, RegType::Float); // 一定会引起bug，传回去的返回值一定是0
+          instr->setDestReg(rd, RegType::Integer);
+          instr->addSrcReg(rs1, RegType::Integer);
+          // instr->addSrcReg(rs2, RegType::Integer);
           break;
         default:
           std::abort();

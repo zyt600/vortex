@@ -29,6 +29,7 @@
 #include "processor_impl.h"
 #endif
 #include "VX_types.h"
+#include "../../tests/regression/raycast/geometry.h"
 
 using namespace vortex;
 
@@ -1460,6 +1461,78 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
           
           rddata[t].i = result;
           //end TODO
+        }
+        rd_write = true;
+      } break;
+      default:
+        std::abort();
+      }
+    } break;
+    case 2: {
+      switch (func3) {
+      case 0: { // TRIT
+        // trace->fu_type = FUType::LSU;
+        // trace->lsu_type = LsuType::RTX;
+
+
+        trace->fu_type = FUType::ALU;
+        trace->alu_type= AluType::TRIT;
+
+
+
+        trace->src_regs[0] = {RegType::Integer, rsrc0};
+        trace->src_regs[1] = {RegType::Integer, rsrc1};
+        trace->fetch_stall = false; // TODOOOOOO???感觉应该是要的。结论：老师说不要
+
+        for (uint32_t t = thread_start; t < num_threads; ++t) {
+          if (!warp.tmask.test(t))
+            continue;
+          float dist = LARGE_FLOAT;
+          float3_t ray_origin;
+          int temp_int;
+          temp_int = this->get_csr(VX_CSR_TRIT_RO1, t, wid);
+          ray_origin.x = *(float*)&temp_int;
+          temp_int = this->get_csr(VX_CSR_TRIT_RO2, t, wid);
+          ray_origin.y = *(float*)&temp_int;
+          temp_int = this->get_csr(VX_CSR_TRIT_RO3, t, wid);
+          ray_origin.z = *(float*)&temp_int;
+
+          float3_t ray_direction;
+          temp_int = this->get_csr(VX_CSR_TRIT_RD1, t, wid);
+          ray_direction.x = *(float*)&temp_int;
+          temp_int = this->get_csr(VX_CSR_TRIT_RD2, t, wid);
+          ray_direction.y = *(float*)&temp_int;
+          temp_int = this->get_csr(VX_CSR_TRIT_RD3, t, wid);
+          ray_direction.z = *(float*)&temp_int;
+
+          ray_t ray;
+          ray.orig = ray_origin;
+          ray.dir = ray_direction;
+
+          float3_t bcoords;
+          tri_t tri;
+
+          uint64_t tri_addr_val = rsdata[t][0].u64;
+          this->dcache_read(&tri.v0.x, tri_addr_val, sizeof(float));
+          this->dcache_read(&tri.v0.y, tri_addr_val+sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v0.z, tri_addr_val+2*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v1.x, tri_addr_val+3*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v1.y, tri_addr_val+4*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v1.z, tri_addr_val+5*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v2.x, tri_addr_val+6*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v2.y, tri_addr_val+7*sizeof(float), sizeof(float));
+          this->dcache_read(&tri.v2.z, tri_addr_val+8*sizeof(float), sizeof(float));
+
+
+          if(ray.intersect(tri, &dist, &bcoords)){
+            this->set_csr(VX_CSR_TRIT_DIST1, *(int*)&bcoords.x, t, wid);
+            this->set_csr(VX_CSR_TRIT_DIST2, *(int*)&bcoords.y, t, wid);
+            this->set_csr(VX_CSR_TRIT_DIST3, *(int*)&bcoords.z, t, wid);
+          } else {
+            dist = LARGE_FLOAT;
+          }
+      
+          rddata[t].f32 = dist;
         }
         rd_write = true;
       } break;

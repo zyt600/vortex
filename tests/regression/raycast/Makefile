@@ -10,6 +10,7 @@ SRCS := $(SRC_DIR)/main.cpp $(SRC_DIR)/tracer.cpp $(SRC_DIR)/mesh.cpp $(SRC_DIR)
 VX_SRCS := $(SRC_DIR)/kernel.cpp
 
 CXXFLAGS += -march=native -DASSETS_PATHS='"$(SRC_DIR)"'
+CXXFLAGS += -I$(VORTEX_HOME)/kernel/include
 
 OPTS ?=
 

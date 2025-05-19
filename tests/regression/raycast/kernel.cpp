@@ -1,7 +1,8 @@
 
 #include <vx_spawn.h>
 #include <vx_print.h>
-#include "render.h"
+#include "render_gpu.h"
+
 
 #define BLOCK_SIZE 8
 

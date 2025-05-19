@@ -210,6 +210,7 @@
 `define VX_CSR_ACTIVE_WARPS             12'hCC3
 `define VX_CSR_ACTIVE_THREADS           12'hCC4     // warning! this value is also used in LLVM
 
+// todooooo真的需要吗，好像真的需要，因为会自动生成cpp的#define
 // ray origin
 `define VX_CSR_TRIT_RO1                 12'hCC5
 `define VX_CSR_TRIT_RO2                 12'hCC6
@@ -219,6 +220,11 @@
 `define VX_CSR_TRIT_RD1                 12'hCC8
 `define VX_CSR_TRIT_RD2                 12'hCC9
 `define VX_CSR_TRIT_RD3                 12'hCCA
+
+// ray distance
+`define VX_CSR_TRIT_DIST1               12'hCCB
+`define VX_CSR_TRIT_DIST2               12'hCCC
+`define VX_CSR_TRIT_DIST3               12'hCCD
 
 `define VX_CSR_NUM_THREADS              12'hFC0
 `define VX_CSR_NUM_WARPS                12'hFC1

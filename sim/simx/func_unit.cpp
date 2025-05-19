@@ -48,7 +48,10 @@ void AluUnit::tick() {
 			output.push(trace, XLEN+delay);
 			break;
 		case AluType::DOT8:
-			output.push(trace, 2+delay);
+			output.push(trace, LATENCY_DOT8+delay);
+			break;
+		case AluType::TRIT:
+			output.push(trace, LATENCY_TRIT+delay);
 			break;
 		default:
 			std::abort();

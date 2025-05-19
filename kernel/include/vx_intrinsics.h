@@ -20,6 +20,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <VX_types.h>
+#include <vx_print.h>
+
 
 #if defined(__clang__)
 #define __UNIFORM__   __attribute__((annotate("vortex.uniform")))
@@ -244,6 +246,13 @@ inline unsigned int vx_dot8(int a, int b) {
     size_t ret;
     __asm__ volatile(".insn r 0x0B, 0x0, 0x01, %0, %1, %2" : "=r"(ret) : "r"(a), "r"(b));
     return ret;
+}
+
+// TRIT - Triangle Intersection Test
+inline float vx_trit(unsigned int tri_ptr) { // tri_ptr是一个float*，但被转化成了unsigned int传进来
+    float dist; // size_t长度是4
+    __asm__ volatile(".insn r 0x0B, 0x0, 0x02, %0, %1, x0" : "=r"(dist) : "r"(tri_ptr)); // opcode, func3, func7
+    return dist;
 }
 
 #ifdef __cplusplus

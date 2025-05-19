@@ -525,6 +525,11 @@
 `define LATENCY_DOT8 2
 `endif
 
+// TRIT Latency
+`ifndef LATENCY_TRIT
+`define LATENCY_TRIT 3
+`endif
+
 // FMA Bandwidth ratio
 `ifndef FMA_PE_RATIO
 `define FMA_PE_RATIO 1
