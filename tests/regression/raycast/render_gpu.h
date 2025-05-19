@@ -1,7 +1,8 @@
 #pragma once
 
 #include "common.h"
-
+#include "VX_types.h"
+#include "vx_intrinsics.h"
 #define BVH_STACK_SIZE 64
 
 // Sample a texture using point filtering
@@ -81,6 +82,13 @@ void BVHIntersect(const ray_t &ray,
   uint32_t stackPtr = 0;
   stack[stackPtr++] = 0; // Push root node index
 
+  csr_write(VX_CSR_TRIT_RO1, *(int*)&ray.orig.x);
+  csr_write(VX_CSR_TRIT_RO2, *(int*)&ray.orig.y);
+  csr_write(VX_CSR_TRIT_RO3, *(int*)&ray.orig.z);
+  csr_write(VX_CSR_TRIT_RD1, *(int*)&ray.dir.x);
+  csr_write(VX_CSR_TRIT_RD2, *(int*)&ray.dir.y);
+  csr_write(VX_CSR_TRIT_RD3, *(int*)&ray.dir.z);
+
   while (stackPtr != 0) {
     uint32_t nodeIdx = stack[--stackPtr];
     const bvh_node_t &node = bvhBuffer[nodeIdx];
@@ -89,13 +97,32 @@ void BVHIntersect(const ray_t &ray,
       for (uint32_t i = 0; i < node.triCount; ++i) {
         uint32_t triIdx = triIdxBuffer[node.leftFirst + i];
         float dist;
-        float3_t bcoords;
-        if (ray.intersect(triBuffer[triIdx], &dist, &bcoords) && dist < hit->dist) {
+
+        uint32_t addr = (uint32_t)(&triBuffer[triIdx]);
+
+        dist= vx_trit(addr);
+        if(dist < LARGE_FLOAT) {
           hit->dist = dist;
-          hit->bcoords = bcoords;
+          //int temp_cx;
+
+          uint32_t temp_cx = csr_read(VX_CSR_TRIT_DIST1);
+          hit->bcoords.x = *(float*)&temp_cx;
+          uint32_t temp_cy = csr_read(VX_CSR_TRIT_DIST2);
+          hit->bcoords.y = *(float*)&temp_cy;
+          uint32_t temp_cz = csr_read(VX_CSR_TRIT_DIST3);
+          hit->bcoords.z = *(float*)&temp_cz;
+
+
           hit->blasIdx = blasIdx;
           hit->triIdx = triIdx;
         }
+
+        // if (ray.intersect(triBuffer[triIdx], &dist, &bcoords) && dist < hit->dist) {
+        //   hit->dist = dist;
+        //   hit->bcoords = bcoords;
+        //   hit->blasIdx = blasIdx;
+        //   hit->triIdx = triIdx;
+        // }
       }
     } else {
       // Process children
