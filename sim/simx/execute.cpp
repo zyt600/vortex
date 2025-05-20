@@ -1474,11 +1474,8 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
         // trace->fu_type = FUType::LSU;
         // trace->lsu_type = LsuType::RTX;
 
-
         trace->fu_type = FUType::ALU;
         trace->alu_type= AluType::TRIT;
-
-
 
         trace->src_regs[0] = {RegType::Integer, rsrc0};
         trace->src_regs[1] = {RegType::Integer, rsrc1};

@@ -512,7 +512,6 @@ Word Emulator::get_csr(uint32_t addr, uint32_t tid, uint32_t wid) {
   case VX_CSR_VINSTRET:
     return csrs_.at(wid).at(tid)[VX_CSR_VINSTRET];
 #endif
-  // TODOOOOOOOOOO
   // TRIT CSRs - ray origin and direction
   case VX_CSR_TRIT_RO1:
   case VX_CSR_TRIT_RO2:
@@ -672,7 +671,6 @@ void Emulator::set_csr(uint32_t addr, Word value, uint32_t tid, uint32_t wid) {
   case VX_CSR_VLENB: // read only, set to VLEN / 8
 #endif
 
-// TODOOOOOOOOOOO
   // TRIT CSRs - ray origin and direction
   case VX_CSR_TRIT_RO1:
   case VX_CSR_TRIT_RO2:
