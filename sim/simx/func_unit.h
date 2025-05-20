@@ -75,25 +75,25 @@ private:
 
  	struct pending_req_t {
 		instr_trace_t* trace;
-		BitVector<> mask;
+		uint32_t count;
+		bool eop;
 	};
 
 	struct lsu_state_t {
-		HashTable<pending_req_t> pending_rd_reqs;
-		instr_trace_t* fence_trace;
 		bool fence_lock;
-
-		lsu_state_t() : pending_rd_reqs(LSUQ_IN_SIZE) {}
-
+		instr_trace_t* fence_trace;
+		CircularBuffer<pending_req_t, 32> pending_rd_reqs;
 		void clear() {
-			this->pending_rd_reqs.clear();
-			this->fence_trace = nullptr;
-			this->fence_lock = false;
+			fence_lock = false;
+			fence_trace = nullptr;
+			pending_rd_reqs.clear();
 		}
 	};
 
 	std::array<lsu_state_t, NUM_LSU_BLOCKS> states_;
 	uint64_t pending_loads_;
+	std::vector<mem_addr_size_t> pending_addrs_;
+	uint32_t remain_addrs_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
