@@ -3,3 +3,5 @@
 *.cache
 *.code-workspace
 /tests/regression/raycast/assets/*
+output*.txt
+third_party/*

@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <iostream>
+#include <vector>
 #include <util.h>
 #include "types.h"
 #include "arch.h"
@@ -34,6 +35,13 @@ struct LsuTraceData : public ITraceData {
   using Ptr = std::shared_ptr<LsuTraceData>;
   std::vector<mem_addr_size_t> mem_addrs;
   LsuTraceData(uint32_t num_threads) : mem_addrs(num_threads) {}
+};
+
+class RTXTraceData : public ITraceData {
+public:
+  using Ptr = std::shared_ptr<RTXTraceData>;
+  std::vector<std::vector<mem_addr_size_t>> mem_addrs;
+  RTXTraceData(uint32_t num_threads) : mem_addrs(num_threads) {}
 };
 
 struct SFUTraceData : public ITraceData {

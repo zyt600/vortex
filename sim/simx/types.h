@@ -130,8 +130,8 @@ enum class AluType {
   SYSCALL,
   IMUL,
   IDIV,
-  DOT8,
-  TRIT
+  DOT8//,
+  // TRIT
 };
 
 inline std::ostream &operator<<(std::ostream &os, const AluType& type) {
@@ -142,7 +142,7 @@ inline std::ostream &operator<<(std::ostream &os, const AluType& type) {
   case AluType::IMUL:    os << "IMUL"; break;
   case AluType::IDIV:    os << "IDIV"; break;
   case AluType::DOT8:    os << "DOT8"; break;
-  case AluType::TRIT:    os << "TRIT"; break;
+  // case AluType::TRIT:    os << "TRIT"; break;
   default: assert(false);
   }
   return os;
@@ -217,6 +217,10 @@ inline std::ostream &operator<<(std::ostream &os, const AddrType& type) {
 ///////////////////////////////////////////////////////////////////////////////
 
 struct mem_addr_size_t {
+  mem_addr_size_t(uint64_t _addr = 0, uint32_t _size = 0)
+    : addr(_addr)
+    , size(_size)
+  {}
   uint64_t addr;
   uint32_t size;
 };

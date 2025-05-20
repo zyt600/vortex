@@ -1471,15 +1471,18 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
     case 2: {
       switch (func3) {
       case 0: { // TRIT
-        // trace->fu_type = FUType::LSU;
-        // trace->lsu_type = LsuType::RTX;
+        trace->fu_type = FUType::LSU;
+        trace->lsu_type = LsuType::RTX;
 
-        trace->fu_type = FUType::ALU;
-        trace->alu_type= AluType::TRIT;
+        // trace->fu_type = FUType::ALU;
+        // trace->alu_type= AluType::TRIT;
 
         trace->src_regs[0] = {RegType::Integer, rsrc0};
         trace->src_regs[1] = {RegType::Integer, rsrc1};
         trace->fetch_stall = false; // TODOOOOOO???感觉应该是要的。结论：老师说不要
+
+        auto trace_data = std::make_shared<RTXTraceData>(num_threads);
+        trace->data = trace_data;
 
         for (uint32_t t = thread_start; t < num_threads; ++t) {
           if (!warp.tmask.test(t))
@@ -1511,14 +1514,31 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
 
           uint64_t tri_addr_val = rsdata[t][0].u64;
           this->dcache_read(&tri.v0.x, tri_addr_val, sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val, sizeof(float)});
+          
           this->dcache_read(&tri.v0.y, tri_addr_val+sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v0.z, tri_addr_val+2*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+2*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v1.x, tri_addr_val+3*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+3*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v1.y, tri_addr_val+4*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+4*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v1.z, tri_addr_val+5*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+5*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v2.x, tri_addr_val+6*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+6*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v2.y, tri_addr_val+7*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+7*sizeof(float), sizeof(float)});
+          
           this->dcache_read(&tri.v2.z, tri_addr_val+8*sizeof(float), sizeof(float));
+          trace_data->mem_addrs[t].push_back({tri_addr_val+8*sizeof(float), sizeof(float)});
 
 
           if(ray.intersect(tri, &dist, &bcoords)){

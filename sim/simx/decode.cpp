@@ -398,6 +398,7 @@ static const char* op_string(const Instr &instr) {
       switch (func3) {
       case 0:  // TRIT
         return "TRIT";
+        // return "RTX";
       default:
         std::abort();
       }
