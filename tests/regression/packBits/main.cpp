@@ -8,8 +8,6 @@
 #include <cstdint>
 #include "common.h"
 
-#define FLOAT_ULP 6
-
 #define RT_CHECK(_expr)                                         \
    do {                                                         \
      int _ret = _expr;                                          \
@@ -26,17 +24,14 @@ template <typename Type>
 class Comparator {};
 
 template <>
-class Comparator<int> {
+class Comparator<char> {
 public:
   static const char* type_str() {
-    return "integer";
+    return "char";
   }
-  static int generate() {
-    return rand();
-  }
-  static bool compare(int a, int b, int index, int errors) {
+  static bool compare(char a, char b, int index, int error_num) {
     if (a != b) {
-      if (errors < 100) {
+      if (error_num < 100) {
         printf("*** error: [%d] expected=%d, actual=%d\n", index, b, a);
       }
       return false;
@@ -45,45 +40,23 @@ public:
   }
 };
 
-template <>
-class Comparator<int8_t> {
-public:
-  static const char* type_str() {
-    return "int8_t";
-  }
-  static int8_t generate() {
-    return rand()%127;
-  }
-  static bool compare(int8_t a, int8_t b, int index, int errors) {
-    if (a != b) {
-      if (errors < 100) {
-        printf("*** error: [%d] expected=%d, actual=%d\n", index, b, a);
-      }
-      return false;
-    }
-    return true;
-  }
-};
 
-static void matmul_cpu(int32_t* out, const int8_t* A, const int8_t* B, uint32_t width, uint32_t height) {
-  for (uint32_t row = 0; row < height; ++row) {
-    for (uint32_t col = 0; col < width; ++col) {
-      int32_t sum = 0;
-      for (uint32_t e = 0; e < width; ++e) {
-        sum += static_cast<int32_t>(A[row * width + e]) * static_cast<int32_t>(B[e * width + col]);
-      }
-      out[row * width + col] = sum;
-    }
+static void matmul_cpu(char* out, const char* tensor, int size) {
+  int packed_tensor_ele_num = (size+7)/8;
+  for (uint32_t i = 0; i < packed_tensor_ele_num; ++i) {
+    out[i] = 0;
+  }
+  for (int i = 0; i < size; ++i) {
+    out[i/8] |= (tensor[i] << (i%8));
   }
 }
 
 const char* kernel_file = "kernel.vxbin";
-uint32_t size = 32;
+uint32_t tensor_element_num = 1024;
 
 vx_device_h device = nullptr;
-vx_buffer_h A_buffer = nullptr;
-vx_buffer_h B_buffer = nullptr;
-vx_buffer_h C_buffer = nullptr;
+vx_buffer_h tensor_buffer_device = nullptr;
+vx_buffer_h packed_tensor_buffer_device = nullptr;
 vx_buffer_h krnl_buffer = nullptr;
 vx_buffer_h args_buffer = nullptr;
 kernel_arg_t kernel_arg = {};
@@ -98,7 +71,7 @@ static void parse_args(int argc, char **argv) {
   while ((c = getopt(argc, argv, "n:k:h")) != -1) {
     switch (c) {
     case 'n':
-      size = atoi(optarg);
+      tensor_element_num = atoi(optarg);
       break;
     case 'k':
       kernel_file = optarg;
@@ -116,9 +89,8 @@ static void parse_args(int argc, char **argv) {
 
 void cleanup() {
   if (device) {
-    vx_mem_free(A_buffer);
-    vx_mem_free(B_buffer);
-    vx_mem_free(C_buffer);
+    vx_mem_free(tensor_buffer_device);
+    vx_mem_free(packed_tensor_buffer_device);
     vx_mem_free(krnl_buffer);
     vx_mem_free(args_buffer);
     vx_dev_close(device);
@@ -135,52 +107,37 @@ int main(int argc, char *argv[]) {
   std::cout << "open device connection" << std::endl;
   RT_CHECK(vx_dev_open(&device));
 
-  uint32_t size_sq = size * size;
-  uint32_t A_buf_size = size_sq * sizeof(int8_t);
-  uint32_t B_buf_size = size_sq * sizeof(int8_t);
-  uint32_t C_buf_size = size_sq * sizeof(int32_t);
+  int packed_tensor_ele_num = (tensor_element_num+7)/8;
+  int tensor_size = tensor_element_num * sizeof(char);
+  int packed_tensor_size = packed_tensor_ele_num * sizeof(char);
 
-  std::cout << "data type: " << Comparator<int8_t>::type_str() << std::endl;   // todo
-  std::cout << "matrix size: " << size << "x" << size << std::endl;
+  std::vector<char> tensor(tensor_element_num);
+  std::vector<char> packed_tensor(packed_tensor_ele_num);
 
-  kernel_arg.grid_dim[0] = size;
-  kernel_arg.grid_dim[1] = size;
-  kernel_arg.size = size;
+  kernel_arg.grid_dim[0] = packed_tensor_ele_num;
 
   // allocate device memory
   std::cout << "allocate device memory" << std::endl;
-  RT_CHECK(vx_mem_alloc(device, A_buf_size, VX_MEM_READ, &A_buffer));
-  RT_CHECK(vx_mem_address(A_buffer, &kernel_arg.A_addr));
-  RT_CHECK(vx_mem_alloc(device, B_buf_size, VX_MEM_READ, &B_buffer));
-  RT_CHECK(vx_mem_address(B_buffer, &kernel_arg.B_addr));
-  RT_CHECK(vx_mem_alloc(device, C_buf_size, VX_MEM_WRITE, &C_buffer));
-  RT_CHECK(vx_mem_address(C_buffer, &kernel_arg.C_addr));
+  RT_CHECK(vx_mem_alloc(device, tensor_size, VX_MEM_READ, &tensor_buffer_device));
+  RT_CHECK(vx_mem_address(tensor_buffer_device, &kernel_arg.tensor_addr));
 
-  std::cout << "A_addr=0x" << std::hex << kernel_arg.A_addr << std::endl;
-  std::cout << "B_addr=0x" << std::hex << kernel_arg.B_addr << std::endl;
-  std::cout << "C_addr=0x" << std::hex << kernel_arg.C_addr << std::endl;
+  RT_CHECK(vx_mem_alloc(device, packed_tensor_size, VX_MEM_READ_WRITE, &packed_tensor_buffer_device));
+  RT_CHECK(vx_mem_address(packed_tensor_buffer_device, &kernel_arg.packed_tensor_addr));
+
+  kernel_arg.tensor_ele_num = tensor_element_num;
+
+  std::cout << "tensor_addr=0x" << std::hex << kernel_arg.tensor_addr << std::endl;
+  std::cout << "packed_tensor_addr=0x" << std::hex << kernel_arg.packed_tensor_addr << std::endl;
 
   // generate source data
-  std::vector<int8_t> h_A(size_sq);
-  std::vector<int8_t> h_B(size_sq);
-  std::vector<int32_t> h_C(size_sq);
-  for (uint32_t i = 0; i < size_sq; ++i) {
-    h_A[i] = Comparator<int8_t>::generate();
-  }
-  for (uint32_t i = 0; i < size_sq; ++i) {
-    h_B[i] = Comparator<int8_t>::generate();
+  for (uint32_t i = 0; i < tensor_element_num; ++i) {
+    tensor[i] = (rand() % 2)==0;
   }
 
-  // upload matrix A buffer
+  // upload tensor buffer
   {
-    std::cout << "upload matrix A buffer" << std::endl;
-    RT_CHECK(vx_copy_to_dev(A_buffer, h_A.data(), 0, A_buf_size));
-  }
-
-  // upload matrix B buffer
-  {
-    std::cout << "upload matrix B buffer" << std::endl;
-    RT_CHECK(vx_copy_to_dev(B_buffer, h_B.data(), 0, B_buf_size));
+    std::cout << "upload tensor buffer" << std::endl;
+    RT_CHECK(vx_copy_to_dev(tensor_buffer_device, tensor.data(), 0, tensor_size));
   }
 
   // upload program
@@ -207,18 +164,17 @@ int main(int argc, char *argv[]) {
 
   // download destination buffer
   std::cout << "download destination buffer" << std::endl;
-  RT_CHECK(vx_copy_from_dev(h_C.data(), C_buffer, 0, C_buf_size));
+  RT_CHECK(vx_copy_from_dev(packed_tensor.data(), packed_tensor_buffer_device, 0, packed_tensor_size));
 
   // verify result
   std::cout << "verify result" << std::endl;
-  int errors = 0;
+  int error_num = 0;
   {
-    std::vector<int32_t> h_ref(size_sq);
-    matmul_cpu(h_ref.data(), h_A.data(), h_B.data(), size, size);
-    
-    for (uint32_t i = 0; i < h_ref.size(); ++i) {
-      if (!Comparator<int32_t>::compare(h_C[i], h_ref[i], i, errors)) {
-        ++errors;
+    std::vector<char> h_ref(packed_tensor_ele_num);
+    matmul_cpu(h_ref.data(), tensor.data(), tensor_element_num);
+    for (int i = 0; i < packed_tensor_ele_num; ++i) {
+      if (!Comparator<char>::compare(packed_tensor[i], h_ref[i], i, error_num)) {
+        ++error_num;
       }
     }
   }
@@ -227,10 +183,10 @@ int main(int argc, char *argv[]) {
   std::cout << "cleanup" << std::endl;
   cleanup();
 
-  if (errors != 0) {
-    std::cout << "Found " << std::dec << errors << " errors!" << std::endl;
+  if (error_num != 0) {
+    std::cout << "Found " << std::dec << error_num << " error_num!" << std::endl;
     std::cout << "FAILED!" << std::endl;
-    return errors;
+    return error_num;
   }
 
   std::cout << "PASSED!" << std::endl;

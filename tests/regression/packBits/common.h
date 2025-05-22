@@ -6,11 +6,10 @@
 #endif
 
 typedef struct {
-  uint32_t grid_dim[2];
-  uint32_t size;
-  uint64_t A_addr;
-  uint64_t B_addr;
-  uint64_t C_addr;
+  uint32_t grid_dim[1];
+  int tensor_ele_num;
+  uint64_t tensor_addr;
+  uint64_t packed_tensor_addr;
 } kernel_arg_t;
 
 #endif
