@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
   std::cout << "open device connection" << std::endl;
   RT_CHECK(vx_dev_open(&device));
 
+  printf("tensor_element_num=%d\n", tensor_element_num);
   int packed_tensor_ele_num = (tensor_element_num+7)/8;
   int tensor_size = tensor_element_num * sizeof(char);
   int packed_tensor_size = packed_tensor_ele_num * sizeof(char);
@@ -114,7 +115,13 @@ int main(int argc, char *argv[]) {
   std::vector<char> tensor(tensor_element_num);
   std::vector<char> packed_tensor(packed_tensor_ele_num);
 
+  #ifdef WORK_LOAD_PER_THREAD
+  kernel_arg.grid_dim[0] = (packed_tensor_ele_num+WORK_LOAD_PER_THREAD-1) / WORK_LOAD_PER_THREAD;
+  #else
   kernel_arg.grid_dim[0] = packed_tensor_ele_num;
+  #endif
+  printf("kernel_arg.grid_dim[0]=%d\n", kernel_arg.grid_dim[0]);
+
 
   // allocate device memory
   std::cout << "allocate device memory" << std::endl;

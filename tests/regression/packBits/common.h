@@ -5,6 +5,8 @@
 #define TYPE int8_t
 #endif
 
+#define WORK_LOAD_PER_THREAD 4
+
 typedef struct {
   uint32_t grid_dim[1];
   int tensor_ele_num;
