@@ -255,6 +255,12 @@ inline float vx_trit(unsigned int tri_ptr) { // tri_ptr是一个float*，但被�
     return dist;
 }
 
+inline int8_t vx_pack_bits(int32_t src1, int32_t src2) {
+    int32_t ret;
+    __asm__ volatile(".insn r 0x0B, 0x1, 0x02, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+    return (int8_t)ret;
+}
+
 #ifdef __cplusplus
 }
 #endif

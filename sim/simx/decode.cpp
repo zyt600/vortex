@@ -399,6 +399,8 @@ static const char* op_string(const Instr &instr) {
       case 0:  // TRIT
         return "TRIT";
         // return "RTX";
+      case 1:  // PACK_BITS
+        return "PACK_BITS";
       default:
         std::abort();
       }
@@ -609,6 +611,11 @@ std::shared_ptr<Instr> Emulator::decode(uint32_t code) const {
           instr->setDestReg(rd, RegType::Integer);
           instr->addSrcReg(rs1, RegType::Integer);
           // instr->addSrcReg(rs2, RegType::Integer);
+          break;
+        case 1:  // PACK_BITS
+          instr->setDestReg(rd, RegType::Integer);
+          instr->addSrcReg(rs1, RegType::Integer);
+          instr->addSrcReg(rs2, RegType::Integer);
           break;
         default:
           std::abort();

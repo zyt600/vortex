@@ -29,10 +29,13 @@ public:
   static const char* type_str() {
     return "char";
   }
-  static bool compare(char a, char b, int index, int error_num) {
-    if (a != b) {
+  static bool compare(char correct, char actual, int index, int error_num) {
+    if (correct != actual) {
       if (error_num < 100) {
-        printf("*** error: [%d] expected=%d, actual=%d\n", index, b, a);
+        char str1[9], str2[9];
+        byte_to_str(correct, str1);
+        byte_to_str(actual, str2);
+        printf("*** error: [%d] expected=%s, actual=%s\n", index, str1, str2);
       }
       return false;
     }
@@ -43,7 +46,7 @@ public:
 
 static void matmul_cpu(char* out, const char* tensor, int size) {
   int packed_tensor_ele_num = (size+7)/8;
-  for (uint32_t i = 0; i < packed_tensor_ele_num; ++i) {
+  for (int i = 0; i < packed_tensor_ele_num; ++i) {
     out[i] = 0;
   }
   for (int i = 0; i < size; ++i) {
@@ -109,14 +112,12 @@ int main(int argc, char *argv[]) {
 
   printf("tensor_element_num=%d\n", tensor_element_num);
   int packed_tensor_ele_num = (tensor_element_num+7)/8;
-  int tensor_size = tensor_element_num * sizeof(char);
-  int packed_tensor_size = packed_tensor_ele_num * sizeof(char);
 
   std::vector<char> tensor(tensor_element_num);
   std::vector<char> packed_tensor(packed_tensor_ele_num);
 
   #ifdef WORK_LOAD_PER_THREAD
-  kernel_arg.grid_dim[0] = (packed_tensor_ele_num+WORK_LOAD_PER_THREAD-1) / WORK_LOAD_PER_THREAD;
+  kernel_arg.grid_dim[0] = (packed_tensor_ele_num + WORK_LOAD_PER_THREAD-1) / WORK_LOAD_PER_THREAD;
   #else
   kernel_arg.grid_dim[0] = packed_tensor_ele_num;
   #endif
@@ -125,10 +126,10 @@ int main(int argc, char *argv[]) {
 
   // allocate device memory
   std::cout << "allocate device memory" << std::endl;
-  RT_CHECK(vx_mem_alloc(device, tensor_size, VX_MEM_READ, &tensor_buffer_device));
+  RT_CHECK(vx_mem_alloc(device, tensor_element_num, VX_MEM_READ, &tensor_buffer_device));
   RT_CHECK(vx_mem_address(tensor_buffer_device, &kernel_arg.tensor_addr));
 
-  RT_CHECK(vx_mem_alloc(device, packed_tensor_size, VX_MEM_READ_WRITE, &packed_tensor_buffer_device));
+  RT_CHECK(vx_mem_alloc(device, packed_tensor_ele_num, VX_MEM_READ_WRITE, &packed_tensor_buffer_device));
   RT_CHECK(vx_mem_address(packed_tensor_buffer_device, &kernel_arg.packed_tensor_addr));
 
   kernel_arg.tensor_ele_num = tensor_element_num;
@@ -144,7 +145,7 @@ int main(int argc, char *argv[]) {
   // upload tensor buffer
   {
     std::cout << "upload tensor buffer" << std::endl;
-    RT_CHECK(vx_copy_to_dev(tensor_buffer_device, tensor.data(), 0, tensor_size));
+    RT_CHECK(vx_copy_to_dev(tensor_buffer_device, tensor.data(), 0, tensor_element_num));
   }
 
   // upload program
@@ -171,7 +172,7 @@ int main(int argc, char *argv[]) {
 
   // download destination buffer
   std::cout << "download destination buffer" << std::endl;
-  RT_CHECK(vx_copy_from_dev(packed_tensor.data(), packed_tensor_buffer_device, 0, packed_tensor_size));
+  RT_CHECK(vx_copy_from_dev(packed_tensor.data(), packed_tensor_buffer_device, 0, packed_tensor_ele_num));
 
   // verify result
   std::cout << "verify result" << std::endl;
@@ -180,7 +181,7 @@ int main(int argc, char *argv[]) {
     std::vector<char> h_ref(packed_tensor_ele_num);
     matmul_cpu(h_ref.data(), tensor.data(), tensor_element_num);
     for (int i = 0; i < packed_tensor_ele_num; ++i) {
-      if (!Comparator<char>::compare(packed_tensor[i], h_ref[i], i, error_num)) {
+      if (!Comparator<char>::compare(h_ref[i], packed_tensor[i], i, error_num)) {
         ++error_num;
       }
     }

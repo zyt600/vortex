@@ -50,6 +50,9 @@ void AluUnit::tick() {
 		case AluType::DOT8:
 			output.push(trace, LATENCY_DOT8+delay);
 			break;
+		case AluType::PACK_BITS:
+			output.push(trace, 2+delay);
+			break;
 		// case AluType::TRIT:
 		// 	output.push(trace, LATENCY_TRIT+delay);
 		// 	break;

@@ -130,7 +130,8 @@ enum class AluType {
   SYSCALL,
   IMUL,
   IDIV,
-  DOT8//,
+  DOT8,
+  PACK_BITS
   // TRIT
 };
 
@@ -142,6 +143,7 @@ inline std::ostream &operator<<(std::ostream &os, const AluType& type) {
   case AluType::IMUL:    os << "IMUL"; break;
   case AluType::IDIV:    os << "IDIV"; break;
   case AluType::DOT8:    os << "DOT8"; break;
+  case AluType::PACK_BITS: os << "PACK_BITS"; break;
   // case AluType::TRIT:    os << "TRIT"; break;
   default: assert(false);
   }
