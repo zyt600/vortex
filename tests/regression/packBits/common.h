@@ -4,9 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-// #define WORK_LOAD_PER_THREAD 4
-
-#define PACK_BITS_INTRINSICS
+#include "config.h"
 
 typedef struct {
   uint32_t grid_dim[1];

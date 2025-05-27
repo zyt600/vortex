@@ -101,6 +101,21 @@ void cleanup() {
 }
 
 int main(int argc, char *argv[]) {
+  printf("\n\n");
+  #ifdef WORK_LOAD_PER_THREAD
+  printf("WORK_LOAD_PER_THREAD is %d\n", WORK_LOAD_PER_THREAD);
+  #else
+  printf("WORK_LOAD_PER_THREAD is not defined\n");
+  #endif
+
+  #ifdef PACK_BITS_INTRINSICS
+  printf("PACK_BITS_INTRINSICS is defined\n");
+  #else
+  printf("PACK_BITS_INTRINSICS is not defined\n");
+  #endif
+  printf("\n\n");
+
+
   // parse command arguments
   parse_args(argc, argv);
 
