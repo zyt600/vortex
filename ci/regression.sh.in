@@ -104,9 +104,6 @@ regression()
     # test temp driver mode for
     ./ci/blackbox.sh --driver=simx --app=vecadd --rebuild=3
 
-    # test for matmul
-    CONFIGS="-DTC_NUM=4 -DTC_SIZE=8" ./ci/blackbox.sh --cores=4 --app=matmul --driver=simx --threads=32 --warps=32 --args="-n128 -d1"
-
     echo "regression tests done!"
 }
 
@@ -151,33 +148,33 @@ cache()
     CONFIGS="-DLMEM_DISABLE" ./ci/blackbox.sh --driver=simx --app=demo --perf=1
 
     # disable L1 cache
-    CONFIGS="-DL1_DISABLE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DL1_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DDCACHE_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DICACHE_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
+    CONFIGS="-DL1_DISABLE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DL1_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DDCACHE_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DICACHE_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
 
     # reduce l1 line size
     CONFIGS="-DL1_LINE_SIZE=$XSIZE" ./ci/blackbox.sh --driver=rtlsim --app=io_addr
     CONFIGS="-DL1_LINE_SIZE=$XSIZE -DDISABLE_L1" ./ci/blackbox.sh --driver=rtlsim --app=io_addr
     CONFIGS="-DL1_LINE_SIZE=$XSIZE" ./ci/blackbox.sh --driver=simx --app=io_addr
-    CONFIGS="-DL1_LINE_SIZE=$XSIZE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DL1_LINE_SIZE=$XSIZE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=simx --app=sgemmx
+    CONFIGS="-DL1_LINE_SIZE=$XSIZE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DL1_LINE_SIZE=$XSIZE -DLMEM_DISABLE" ./ci/blackbox.sh --driver=simx --app=sgemm
 
     # test cache ways
-    CONFIGS="-DICACHE_NUM_WAYS=1 -DDCACHE_NUM_WAYS=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DICACHE_NUM_WAYS=4 -DDCACHE_NUM_WAYS=8" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DICACHE_NUM_WAYS=4 -DDCACHE_NUM_WAYS=8" ./ci/blackbox.sh --driver=simx --app=sgemmx
+    CONFIGS="-DICACHE_NUM_WAYS=1 -DDCACHE_NUM_WAYS=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DICACHE_NUM_WAYS=4 -DDCACHE_NUM_WAYS=8" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DICACHE_NUM_WAYS=4 -DDCACHE_NUM_WAYS=8" ./ci/blackbox.sh --driver=simx --app=sgemm
 
     # test cache banking
-    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=4 -DDCACHE_NUM_BANKS=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=4 -DDCACHE_NUM_BANKS=1" ./ci/blackbox.sh --driver=simx --app=sgemmx
-    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=2 -DDCACHE_NUM_BANKS=4" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx --threads=8
-    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=2 -DDCACHE_NUM_BANKS=4" ./ci/blackbox.sh --driver=simx --app=sgemmx --threads=8
+    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=4 -DDCACHE_NUM_BANKS=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=4 -DDCACHE_NUM_BANKS=1" ./ci/blackbox.sh --driver=simx --app=sgemm
+    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=2 -DDCACHE_NUM_BANKS=4" ./ci/blackbox.sh --driver=rtlsim --app=sgemm --threads=8
+    CONFIGS="-DMEM_BLOCK_SIZE=8 -DLMEM_NUM_BANKS=2 -DDCACHE_NUM_BANKS=4" ./ci/blackbox.sh --driver=simx --app=sgemm --threads=8
 
     # replacement policy
-    CONFIGS="-DDCACHE_REPL_POLICY=0" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DDCACHE_REPL_POLICY=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
-    CONFIGS="-DDCACHE_REPL_POLICY=2" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx
+    CONFIGS="-DDCACHE_REPL_POLICY=0" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DDCACHE_REPL_POLICY=1" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
+    CONFIGS="-DDCACHE_REPL_POLICY=2" ./ci/blackbox.sh --driver=rtlsim --app=sgemm
 
     # test writeback
     CONFIGS="-DDCACHE_WRITEBACK=1 -DDCACHE_DIRTYBYTES=0 -DDCACHE_NUM_WAYS=4" ./ci/blackbox.sh --driver=rtlsim --app=mstress
@@ -187,7 +184,7 @@ cache()
     CONFIGS="-DSOCKET_SIZE=1 -DL2_WRITEBACK=1 -DL3_WRITEBACK=1" ./ci/blackbox.sh --driver=simx --cores=2 --clusters=2 --l2cache --l3cache --app=mstress
 
     # cache clustering
-    CONFIGS="-DSOCKET_SIZE=4 -DNUM_DCACHES=4 -DNUM_ICACHES=2" ./ci/blackbox.sh --driver=rtlsim --app=sgemmx --cores=4 --warps=1 --threads=2
+    CONFIGS="-DSOCKET_SIZE=4 -DNUM_DCACHES=4 -DNUM_ICACHES=2" ./ci/blackbox.sh --driver=rtlsim --app=sgemm --cores=4 --warps=1 --threads=2
 
     # L2/L3
     CONFIGS="-DSOCKET_SIZE=1" ./ci/blackbox.sh --driver=rtlsim --cores=4 --l2cache --app=diverge --args="-n1"
@@ -204,6 +201,8 @@ config1()
 
     # warp/threads
     ./ci/blackbox.sh --driver=rtlsim --warps=1 --threads=1 --app=diverge
+    ./ci/blackbox.sh --driver=rtlsim --warps=2 --threads=1 --app=diverge
+    ./ci/blackbox.sh --driver=rtlsim --warps=1 --threads=2 --app=diverge
     ./ci/blackbox.sh --driver=rtlsim --warps=2 --threads=2 --app=diverge
     ./ci/blackbox.sh --driver=rtlsim --warps=2 --threads=8 --app=diverge
     ./ci/blackbox.sh --driver=rtlsim --warps=8 --threads=2 --app=diverge
@@ -224,17 +223,25 @@ config1()
     CONFIGS="-DISSUE_WIDTH=2" ./ci/blackbox.sh --driver=simx --app=diverge
     CONFIGS="-DISSUE_WIDTH=4" ./ci/blackbox.sh --driver=simx --app=diverge
 
+    # simd width
+    CONFIGS="-DSIMD_WIDTH=1" ./ci/blackbox.sh --driver=rtlsim --app=dogfood --args="-ttrig"
+    CONFIGS="-DSIMD_WIDTH=2" ./ci/blackbox.sh --driver=rtlsim --app=dogfood --args="-ttrig"
+    CONFIGS="-DSIMD_WIDTH=1" ./ci/blackbox.sh --driver=simx --app=dogfood --args="-ttrig"
+    CONFIGS="-DSIMD_WIDTH=2" ./ci/blackbox.sh --driver=simx --app=dogfood --args="-ttrig"
+
     # ALU scaling
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_ALU_BLOCK=1 -DNUM_ALU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=diverge
+    CONFIGS="-DISSUE_WIDTH=1 -DNUM_ALU_BLOCK=1 -DNUM_ALU_LANES=1" ./ci/blackbox.sh --driver=rtlsim --app=diverge
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_ALU_BLOCK=2 -DNUM_ALU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=diverge
     CONFIGS="-DISSUE_WIDTH=4 -DNUM_ALU_BLOCK=4 -DNUM_ALU_LANES=4" ./ci/blackbox.sh --driver=rtlsim --app=diverge
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_ALU_BLOCK=1 -DNUM_ALU_LANES=2" ./ci/blackbox.sh --driver=simx --app=diverge
+    CONFIGS="-DISSUE_WIDTH=1 -DNUM_ALU_BLOCK=1 -DNUM_ALU_LANES=1" ./ci/blackbox.sh --driver=simx --app=diverge
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_ALU_BLOCK=2 -DNUM_ALU_LANES=2" ./ci/blackbox.sh --driver=simx --app=diverge
     CONFIGS="-DISSUE_WIDTH=4 -DNUM_ALU_BLOCK=4 -DNUM_ALU_LANES=4" ./ci/blackbox.sh --driver=simx --app=diverge
 
     # FPU scaling
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_FPU_BLOCK=1 -DNUM_FPU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=4 -DNUM_FPU_BLOCK=4 -DNUM_FPU_LANES=4" ./ci/blackbox.sh --driver=rtlsim --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_FPU_BLOCK=1 -DNUM_FPU_LANES=2" ./ci/blackbox.sh --driver=simx --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=4 -DNUM_FPU_BLOCK=4 -DNUM_FPU_LANES=4" ./ci/blackbox.sh --driver=simx --app=vecaddx
+    CONFIGS="-DISSUE_WIDTH=2 -DNUM_FPU_BLOCK=1 -DNUM_FPU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_FPU_BLOCK=4 -DNUM_FPU_LANES=4" ./ci/blackbox.sh --driver=rtlsim --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=2 -DNUM_FPU_BLOCK=1 -DNUM_FPU_LANES=2" ./ci/blackbox.sh --driver=simx --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_FPU_BLOCK=4 -DNUM_FPU_LANES=4" ./ci/blackbox.sh --driver=simx --app=regression/vecadd
 
     # FPU's PE scaling
     CONFIGS="-DFMA_PE_RATIO=2" ./ci/blackbox.sh --driver=rtlsim --app=dogfood --args="-tfmadd"
@@ -244,10 +251,10 @@ config1()
     CONFIGS="-DFNCP_PE_RATIO=2" ./ci/blackbox.sh --driver=rtlsim --app=dogfood --args="-tfclamp"
 
     # LSU scaling
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_LSU_BLOCK=1 -DNUM_LSU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=4 -DNUM_LSU_BLOCK=4 -DNUM_LSU_LANES=4" ./ci/blackbox.sh --driver=rtlsim --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=2 -DNUM_LSU_BLOCK=1 -DNUM_LSU_LANES=2" ./ci/blackbox.sh --driver=simx --app=vecaddx
-    CONFIGS="-DISSUE_WIDTH=4 -DNUM_LSU_BLOCK=4 -DNUM_LSU_LANES=4" ./ci/blackbox.sh --driver=simx --app=vecaddx
+    CONFIGS="-DISSUE_WIDTH=2 -DNUM_LSU_BLOCK=1 -DNUM_LSU_LANES=2" ./ci/blackbox.sh --driver=rtlsim --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_LSU_BLOCK=4 -DNUM_LSU_LANES=4" ./ci/blackbox.sh --driver=rtlsim --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=2 -DNUM_LSU_BLOCK=1 -DNUM_LSU_LANES=2" ./ci/blackbox.sh --driver=simx --app=regression/vecadd
+    CONFIGS="-DISSUE_WIDTH=4 -DNUM_LSU_BLOCK=4 -DNUM_LSU_LANES=4" ./ci/blackbox.sh --driver=simx --app=regression/vecadd
 
     echo "configuration-1 tests done!"
 }
@@ -378,7 +385,7 @@ stress()
 
     # test verilator reset values
     CONFIGS="-DVERILATOR_RESET_VALUE=1 -DSOCKET_SIZE=1 -DDCACHE_WRITEBACK=1 -DL2_WRITEBACK=1 -DL3_WRITEBACK=1" ./ci/blackbox.sh --driver=opae --cores=2 --clusters=2 --l2cache --l3cache --app=dogfood
-    CONFIGS="-DVERILATOR_RESET_VALUE=1" ./ci/blackbox.sh --driver=xrt --app=sgemmx --args="-n128" --l2cache
+    CONFIGS="-DVERILATOR_RESET_VALUE=1" ./ci/blackbox.sh --driver=xrt --app=sgemm --args="-n128" --l2cache
 
     echo "stress tests done!"
 }
@@ -397,10 +404,52 @@ vector()
 {
     echo "begin vector tests..."
 
-    make -C sim/simx clean && CONFIGS="-DEXT_V_ENABLE" make -C sim/simx
-    TOOLDIR=@TOOLDIR@ XLEN=@XLEN@ VLEN=256 REG_TESTS=1 ./tests/riscv/riscv-vector-tests/run-test.sh
+    make -C sim/simx clean && CONFIGS="-DVLEN=256 -DEXT_V_ENABLE" make -C sim/simx
+    VLEN=256 REG_TESTS=1 GEN_TESTS=0 ./tests/riscv/riscv-vector-tests/run-test.sh
 
     echo "vector tests done!"
+}
+
+cupbop() {
+
+    echo "begin cupbop tests..."
+
+    if [ "$XLEN" == "32" ]; then
+        echo "cupbop tests skipped for 32-bit"
+        return
+    fi
+
+
+    echo "downloading cupbop binaries..."
+    CUPBOP_URL="https://www.dropbox.com/scl/fi/qxiofb0ejfxoog9m7tmae/cupbop.zip?rlkey=kcboy03c08xcn6yizd4nv8h88&st=7yuqftef&dl=1"
+
+    wget -O cupbop.zip "${CUPBOP_URL}" || curl -L -o cupbop.zip "${CUPBOP_URL}"
+    unzip -o cupbop.zip -d tests/
+    rm cupbop.zip
+
+    echo "building simx runtime..."
+    make -C runtime/simx
+
+    PERF_CLASS=2
+    VORTEX_RUNTIME_DIR="runtime"
+    CUPBOP_RUNTIME_DIR="tests/cupbop/runtime"
+
+    tests=("bfs" "nn")
+    tests_args=("./graph20.txt" "./filelist.txt -r 10 -lat 30 -lng 90")
+
+    for i in "${!tests[@]}"; do
+        test="${tests[$i]}"
+        args="${tests_args[$i]}"
+        echo "running test: $test"
+        (
+            cd "tests/cupbop/$test" || exit
+            chmod +x "./host_${XLEN}.out"
+            LD_LIBRARY_PATH="../../../${CUPBOP_RUNTIME_DIR}:../../../${VORTEX_RUNTIME_DIR}/simx:../../../${VORTEX_RUNTIME_DIR}:${LD_LIBRARY_PATH}" \
+            ./host_${XLEN}.out ${args}
+        )
+    done
+
+    echo "cupbop tests done!"
 }
 
 show_usage()
@@ -459,6 +508,9 @@ while [ "$1" != "" ]; do
         --vector )
                 tests+=("vector")
                 ;;
+        --cupbop )
+                tests+=("cupbop")
+                ;;
         --all )
                 tests=()
                 tests+=("unittest")
@@ -475,6 +527,7 @@ while [ "$1" != "" ]; do
                 tests+=("stress")
                 tests+=("synthesis")
                 tests+=("vector")
+                tests+=("cupbop")
                 ;;
         -h | --help )
                 show_usage

@@ -49,7 +49,7 @@ class AluUnit : public FuncUnit {
 public:
   AluUnit(const SimContext& ctx, Core*);
 
-  void tick();
+  void tick() override;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ class FpuUnit : public FuncUnit {
 public:
   FpuUnit(const SimContext& ctx, Core*);
 
-  void tick();
+  void tick() override;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ private:
 
 		lsu_state_t() : pending_rd_reqs(LSUQ_IN_SIZE) {}
 
-		void clear() {
+		void reset() {
 			this->pending_rd_reqs.clear();
 			this->fence_trace = nullptr;
 			this->fence_lock = false;
@@ -101,19 +101,37 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class TcuUnit : public FuncUnit {
-public:
-    TcuUnit(const SimContext& ctx, Core*);
-    void tick();
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
 class SfuUnit : public FuncUnit {
 public:
 	SfuUnit(const SimContext& ctx, Core*);
 
-	void tick();
+	void tick() override;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef EXT_TPU_ENABLE
+
+class TpuUnit : public FuncUnit {
+public:
+	TpuUnit(const SimContext& ctx, Core*);
+
+	void tick() override;
+};
+
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef EXT_V_ENABLE
+
+class VpuUnit : public FuncUnit {
+public:
+	VpuUnit(const SimContext& ctx, Core*);
+
+	void tick() override;
+};
+
+#endif
 
 }

@@ -9,11 +9,19 @@ VORTEX_RT_PATH ?= $(ROOT_DIR)/runtime
 VORTEX_KN_PATH ?= $(ROOT_DIR)/kernel
 
 ifeq ($(XLEN),64)
-VX_CFLAGS += -march=rv64imafd -mabi=lp64d
-STARTUP_ADDR ?= 0x180000000
+	ifeq ($(EXT_V_ENABLE),1)
+		VX_CFLAGS += -march=rv64imafdv_zve64d -mabi=lp64d # vector extension
+	else
+		VX_CFLAGS += -march=rv64imafd -mabi=lp64d
+	endif
+	STARTUP_ADDR ?= 0x180000000
 else
-VX_CFLAGS += -march=rv32imaf -mabi=ilp32f
-STARTUP_ADDR ?= 0x80000000
+	ifeq ($(EXT_V_ENABLE),1)
+		VX_CFLAGS += -march=rv32imafv_zve32f -mabi=ilp32f # vector extension
+	else
+		VX_CFLAGS += -march=rv32imaf -mabi=ilp32f
+	endif
+	STARTUP_ADDR ?= 0x80000000
 endif
 
 LLVM_CFLAGS += --sysroot=$(RISCV_SYSROOT)
@@ -39,7 +47,7 @@ VX_CP  = $(LLVM_VORTEX)/bin/llvm-objcopy
 #VX_CP  = $(RISCV_TOOLCHAIN_PATH)/bin/$(RISCV_PREFIX)-objcopy
 
 VX_CFLAGS += -O3 -mcmodel=medany -fno-rtti -fno-exceptions -nostartfiles -nostdlib -fdata-sections -ffunction-sections
-VX_CFLAGS += -I$(VORTEX_HOME)/kernel/include -I$(ROOT_DIR)/hw
+VX_CFLAGS += -I$(VORTEX_HOME)/kernel/include -I$(ROOT_DIR)/hw -I$(VORTEX_HOME)/sim/common
 VX_CFLAGS += -DXLEN_$(XLEN)
 VX_CFLAGS += -DNDEBUG
 
@@ -51,7 +59,7 @@ VX_LIBS += $(LIBCRT_VORTEX)/lib/baremetal/libclang_rt.builtins-riscv$(XLEN).a
 VX_LDFLAGS += -Wl,-Bstatic,--gc-sections,-T,$(VORTEX_HOME)/kernel/scripts/link$(XLEN).ld,--defsym=STARTUP_ADDR=$(STARTUP_ADDR) $(VORTEX_KN_PATH)/libvortex.a $(VX_LIBS)
 
 CXXFLAGS += -std=c++17 -Wall -Wextra -pedantic -Wfatal-errors
-CXXFLAGS += -I$(VORTEX_HOME)/runtime/include -I$(ROOT_DIR)/hw
+CXXFLAGS += -I$(VORTEX_HOME)/runtime/include -I$(ROOT_DIR)/hw -I$(VORTEX_HOME)/sim/common
 
 LDFLAGS += -L$(VORTEX_RT_PATH) -lvortex
 

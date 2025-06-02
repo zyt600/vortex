@@ -31,6 +31,7 @@
 `endif
 
 ///////////////////////////////////////////////////////////////////////////////
+
 `ifndef EXT_M_DISABLE
 `define EXT_M_ENABLE
 `endif
@@ -85,8 +86,12 @@
 `endif
 `endif
 
+`ifdef EXT_V_ENABLE
 `ifndef VLEN
-`define VLEN 256
+`define VLEN (4 * `XLEN)
+`endif
+`else
+`define VLEN `XLEN
 `endif
 
 `ifndef NUM_CLUSTERS
@@ -111,36 +116,6 @@
 
 `ifndef SOCKET_SIZE
 `define SOCKET_SIZE `MIN(4, `NUM_CORES)
-`endif
-
-// Size of Tensor Core
-`ifndef TC_SIZE
-`define TC_SIZE 8
-`endif
-
-// Number of TCs per Warp
-`ifndef TC_NUM
-`define TC_NUM 4
-`endif
-
-`ifndef NUM_TCU_LANES
-`define NUM_TCU_LANES   `TC_NUM
-`endif
-
-`ifndef NUM_TCU_BLOCKS
-`define NUM_TCU_BLOCKS  `ISSUE_WIDTH
-`endif
-
-`ifdef L2_ENABLE
-    `define L2_ENABLED   1
-`else
-    `define L2_ENABLED   0
-`endif
-
-`ifdef L3_ENABLE
-    `define L3_ENABLED   1
-`else
-    `define L3_ENABLED   0
 `endif
 
 `ifdef L1_DISABLE
@@ -264,12 +239,10 @@
 `ifndef IO_MPM_ADDR
 `define IO_MPM_ADDR     (`IO_COUT_ADDR + `IO_COUT_SIZE)
 `endif
-`define IO_MPM_SIZE     (8 * 32 * `NUM_CORES * `NUM_CLUSTERS)
 
 `ifndef STACK_LOG2_SIZE
 `define STACK_LOG2_SIZE 13
 `endif
-`define STACK_SIZE      (1 << `STACK_LOG2_SIZE)
 
 `define RESET_DELAY     8
 
@@ -313,6 +286,7 @@
 `ifndef MEM_PAGE_SIZE
 `define MEM_PAGE_SIZE (4096)
 `endif
+
 `ifndef MEM_PAGE_LOG2_SIZE
 `define MEM_PAGE_LOG2_SIZE (12)
 `endif
@@ -365,14 +339,34 @@
 
 // Pipeline Configuration /////////////////////////////////////////////////////
 
+`ifndef SIMD_WIDTH
+`define SIMD_WIDTH      `MIN(`NUM_THREADS, 16)
+`endif
+
 // Issue width
 `ifndef ISSUE_WIDTH
-`define ISSUE_WIDTH     `UP(`NUM_WARPS / 8)
+`define ISSUE_WIDTH     `UP(`NUM_WARPS / 16)
+`endif
+
+// Operand collectors
+`ifndef NUM_OPCS
+`define NUM_OPCS        `MIN(4, `NUM_WARPS / `ISSUE_WIDTH)
+`endif
+`ifndef NUM_VOPCS
+`define NUM_VOPCS       1
+`endif
+
+// Register File Banks
+`ifndef NUM_GPR_BANKS
+`define NUM_GPR_BANKS   4
+`endif
+`ifndef NUM_VGPR_BANKS
+`define NUM_VGPR_BANKS  2
 `endif
 
 // Number of ALU units
 `ifndef NUM_ALU_LANES
-`define NUM_ALU_LANES   `NUM_THREADS
+`define NUM_ALU_LANES   `SIMD_WIDTH
 `endif
 `ifndef NUM_ALU_BLOCKS
 `define NUM_ALU_BLOCKS  `ISSUE_WIDTH
@@ -380,7 +374,7 @@
 
 // Number of FPU units
 `ifndef NUM_FPU_LANES
-`define NUM_FPU_LANES   `NUM_THREADS
+`define NUM_FPU_LANES   `SIMD_WIDTH
 `endif
 `ifndef NUM_FPU_BLOCKS
 `define NUM_FPU_BLOCKS  `ISSUE_WIDTH
@@ -388,7 +382,7 @@
 
 // Number of LSU units
 `ifndef NUM_LSU_LANES
-`define NUM_LSU_LANES   `NUM_THREADS
+`define NUM_LSU_LANES   `SIMD_WIDTH
 `endif
 `ifndef NUM_LSU_BLOCKS
 `define NUM_LSU_BLOCKS  1
@@ -396,10 +390,16 @@
 
 // Number of SFU units
 `ifndef NUM_SFU_LANES
-`define NUM_SFU_LANES   `NUM_THREADS
+`define NUM_SFU_LANES   `SIMD_WIDTH
 `endif
-`ifndef NUM_SFU_BLOCKS
 `define NUM_SFU_BLOCKS  1
+
+// Number of VPU units
+`ifndef NUM_VPU_LANES
+`define NUM_VPU_LANES   `SIMD_WIDTH
+`endif
+`ifndef NUM_VPU_BLOCKS
+`define NUM_VPU_BLOCKS  `ISSUE_WIDTH
 `endif
 
 // Size of Instruction Buffer
@@ -414,18 +414,12 @@
 
 // Size of LSU Core Request Queue
 `ifndef LSUQ_IN_SIZE
-`define LSUQ_IN_SIZE    (2 * (`NUM_THREADS / `NUM_LSU_LANES))
+`define LSUQ_IN_SIZE    (2 * (`SIMD_WIDTH / `NUM_LSU_LANES))
 `endif
 
 // Size of LSU Memory Request Queue
 `ifndef LSUQ_OUT_SIZE
 `define LSUQ_OUT_SIZE   `MAX(`LSUQ_IN_SIZE, `LSU_LINE_SIZE / (`XLEN / 8))
-`endif
-
-`ifdef GBAR_ENABLE
-`define GBAR_ENABLED 1
-`else
-`define GBAR_ENABLED 0
 `endif
 
 `ifndef LATENCY_IMUL
@@ -444,7 +438,7 @@
 
 // Size of FPU Request Queue
 `ifndef FPUQ_SIZE
-`define FPUQ_SIZE (2 * (`NUM_THREADS / `NUM_FPU_LANES))
+`define FPUQ_SIZE (2 * (`SIMD_WIDTH / `NUM_FPU_LANES))
 `endif
 
 // FNCP Latency
@@ -520,16 +514,6 @@
 `define LATENCY_FCVT 5
 `endif
 
-// DOT8 Latency
-`ifndef LATENCY_DOT8
-`define LATENCY_DOT8 2
-`endif
-
-// TRIT Latency
-`ifndef LATENCY_TRIT
-`define LATENCY_TRIT 3
-`endif
-
 // FMA Bandwidth ratio
 `ifndef FMA_PE_RATIO
 `define FMA_PE_RATIO 1
@@ -561,10 +545,8 @@
 `ifndef ICACHE_DISABLE
 `define ICACHE_ENABLE
 `endif
-`ifdef ICACHE_ENABLE
-    `define ICACHE_ENABLED 1
-`else
-    `define ICACHE_ENABLED 0
+
+`ifndef ICACHE_ENABLE
     `define NUM_ICACHES 0
 `endif
 
@@ -618,10 +600,8 @@
 `ifndef DCACHE_DISABLE
 `define DCACHE_ENABLE
 `endif
-`ifdef DCACHE_ENABLE
-    `define DCACHE_ENABLED 1
-`else
-    `define DCACHE_ENABLED 0
+
+`ifndef DCACHE_ENABLE
     `define NUM_DCACHES 0
     `define DCACHE_NUM_BANKS 1
 `endif
@@ -696,10 +676,7 @@
 `define LMEM_ENABLE
 `endif
 
-`ifdef LMEM_ENABLE
-    `define LMEM_ENABLED   1
-`else
-    `define LMEM_ENABLED   0
+`ifndef LMEM_ENABLE
     `define LMEM_NUM_BANKS 1
 `endif
 
@@ -832,6 +809,42 @@
 
 // ISA Extensions /////////////////////////////////////////////////////////////
 
+`ifdef ICACHE_ENABLE
+    `define ICACHE_ENABLED 1
+`else
+    `define ICACHE_ENABLED 0
+`endif
+
+`ifdef DCACHE_ENABLE
+    `define DCACHE_ENABLED 1
+`else
+    `define DCACHE_ENABLED 0
+`endif
+
+`ifdef LMEM_ENABLE
+    `define LMEM_ENABLED 1
+`else
+    `define LMEM_ENABLED 0
+`endif
+
+`ifdef GBAR_ENABLE
+    `define GBAR_ENABLED 1
+`else
+    `define GBAR_ENABLED 0
+`endif
+
+`ifdef L2_ENABLE
+    `define L2_ENABLED 1
+`else
+    `define L2_ENABLED 0
+`endif
+
+`ifdef L3_ENABLE
+    `define L3_ENABLED 1
+`else
+    `define L3_ENABLED 0
+`endif
+
 `ifdef EXT_A_ENABLE
     `define EXT_A_ENABLED   1
 `else
@@ -874,6 +887,12 @@
     `define EXT_ZICOND_ENABLED 0
 `endif
 
+`ifdef EXT_TPU_ENABLE
+    `define EXT_TPU_ENABLED 1
+`else
+    `define EXT_TPU_ENABLED 0
+`endif
+
 `define ISA_STD_A           0
 `define ISA_STD_C           2
 `define ISA_STD_D           3
@@ -892,13 +911,15 @@
 `define ISA_EXT_L3CACHE     3
 `define ISA_EXT_LMEM        4
 `define ISA_EXT_ZICOND      5
+`define ISA_EXT_TPU         6
 
 `define MISA_EXT  (`ICACHE_ENABLED  << `ISA_EXT_ICACHE) \
                 | (`DCACHE_ENABLED  << `ISA_EXT_DCACHE) \
                 | (`L2_ENABLED      << `ISA_EXT_L2CACHE) \
                 | (`L3_ENABLED      << `ISA_EXT_L3CACHE) \
                 | (`LMEM_ENABLED    << `ISA_EXT_LMEM) \
-                | (`EXT_ZICOND_ENABLED << `ISA_EXT_ZICOND)
+                | (`EXT_ZICOND_ENABLED << `ISA_EXT_ZICOND) \
+                | (`EXT_TPU_ENABLED << `ISA_EXT_TPU) \
 
 `define MISA_STD  (`EXT_A_ENABLED <<  0) /* A - Atomic Instructions extension */ \
                 | (0 <<  1) /* B - Tentatively reserved for Bit operations extension */ \
