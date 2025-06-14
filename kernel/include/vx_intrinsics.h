@@ -261,6 +261,37 @@ inline int8_t vx_pack_bits(int32_t src1, int32_t src2) {
     return (int8_t)ret;
 }
 
+inline int8_t vx_pack_bits_flexible(int32_t src1, int32_t src2, int func3){
+    int32_t ret;
+    switch(func3){
+        case 0:
+        __asm__ volatile(".insn r 0x0B, 0x0, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 1:
+        __asm__ volatile(".insn r 0x0B, 0x1, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 2:
+        __asm__ volatile(".insn r 0x0B, 0x2, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 3:
+        __asm__ volatile(".insn r 0x0B, 0x3, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 4:
+        __asm__ volatile(".insn r 0x0B, 0x4, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 5: 
+        __asm__ volatile(".insn r 0x0B, 0x5, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        case 6:
+        __asm__ volatile(".insn r 0x0B, 0x6, 0x04, %0, %1, %2" : "=r"(ret) : "r"(src1), "r"(src2));
+        break;
+        default:
+        vx_printf("vx_pack_bits_flexible: func3=%d is not supported\n", func3);
+        return -1;
+    }
+    return (int8_t)ret;
+}
+
 inline int32_t vx_pack_vec(int32_t addr, int32_t size) {
     int32_t ret;
     // vx_printf("vx_pack_vec: addr=%d, size=%d\n", addr, size);

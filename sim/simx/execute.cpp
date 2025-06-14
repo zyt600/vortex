@@ -1637,6 +1637,41 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
       }
       rd_write = true;
     } break;
+    case 4: {
+      // all the func3 cases are PACK_BITS_FLEX
+      trace->fu_type = FUType::ALU;
+      trace->alu_type = AluType::PACK_BITS;
+      trace->src_regs[0] = {RegType::Integer, rsrc0};
+      trace->src_regs[1] = {RegType::Integer, rsrc1};
+      trace->fetch_stall = false;
+
+      int group_size = 1 << func3; // func3 is the group size
+      for (uint32_t t = thread_start; t < num_threads; ++t) {
+        if (!warp.tmask.test(t))
+          continue;
+
+        int32_t src1 = rsdata[t][0].i;
+        int32_t src2 = rsdata[t][1].i;
+        uint32_t result = 0;
+        // compiler will wrong optimize " (bool*)&src1 ", because it is undefined
+        for (int i = 0; i < 64/group_size; i++) {
+          bool flg=0;
+          for(int g = 0; g < group_size; g++) {
+            if (src1 & (0xFF << (i * group_size + g))) {
+              flg = 1;
+              break;
+            }
+            if (src2 & (0xFF << (i * group_size + g))) {
+              flg = 1;
+              break;
+            }
+          }
+          result |= (flg? 1:0) << i;
+        }
+        rddata[t].u32 = result;
+      }
+      rd_write = true;
+    } break;
     default:
       std::abort();
     }
