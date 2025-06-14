@@ -401,6 +401,8 @@ static const char* op_string(const Instr &instr) {
         // return "RTX";
       case 1:  // PACK_BITS
         return "PACK_BITS";
+      case 2:  // PACK_VEC
+        return "PACK_VEC";
       default:
         std::abort();
       }
@@ -617,9 +619,19 @@ std::shared_ptr<Instr> Emulator::decode(uint32_t code) const {
           instr->addSrcReg(rs1, RegType::Integer);
           instr->addSrcReg(rs2, RegType::Integer);
           break;
+        case 2:  // PACK_VEC
+          instr->setDestReg(rd, RegType::Integer);
+          instr->addSrcReg(rs1, RegType::Integer);
+          instr->addSrcReg(rs2, RegType::Integer);
+          break;
         default:
           std::abort();
         }
+        break;
+      case 3: // all are PACK_BITS
+        instr->setDestReg(rd, RegType::Integer);
+        instr->addSrcReg(rs1, RegType::Integer);
+        instr->addSrcReg(rs2, RegType::Integer);
         break;
       default:
         std::abort();

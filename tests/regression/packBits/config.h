@@ -1,0 +1,2 @@
+#define PACK_BITS_INTRINSICS
+// #define WORK_LOAD_PER_THREAD 4

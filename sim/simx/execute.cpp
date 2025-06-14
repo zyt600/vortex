@@ -1578,11 +1578,63 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
           }
           rddata[t].u32 = result;
         }
+      } break;
+      case 2: { // PACK_VEC
+        trace->fu_type = FUType::ALU;
+        trace->alu_type = AluType::PACK_VEC;
+        trace->src_regs[0] = {RegType::Integer, rsrc0};
+        trace->src_regs[1] = {RegType::Integer, rsrc1};
+        trace->fetch_stall = false;
+
+        for (uint32_t t = thread_start; t < num_threads; ++t) {
+          if (!warp.tmask.test(t))
+            continue;
+          uint64_t addr = rsdata[t][0].u64;
+          int32_t size = rsdata[t][1].i;
+          int32_t result = 0;
+          // 模仿tri_addr_val
+          // 从addr的地址开始，读取size个字节，然后pack成一个int32_t
+          for (int i = 0; i < size; i++) {
+            uint8_t byte;
+            this->dcache_read(&byte, addr + i, 1);
+            result |= (byte? 1:0) << i;
+          }
+          rddata[t].u32 = result;
+        }
         rd_write = true;
       } break;
       default:
         std::abort();
       }
+    } break;
+    case 3: {
+      // all the func3 cases are PACK_BITS
+      int mask = 1 << func3;
+      trace->fu_type = FUType::ALU;
+      trace->alu_type = AluType::PACK_BITS;
+      trace->src_regs[0] = {RegType::Integer, rsrc0};
+      trace->src_regs[1] = {RegType::Integer, rsrc1};
+      trace->fetch_stall = false;
+
+      for (uint32_t t = thread_start; t < num_threads; ++t) {
+        if (!warp.tmask.test(t))
+          continue;
+
+        int32_t src1 = rsdata[t][0].i;
+        int32_t src2 = rsdata[t][1].i;
+        uint32_t result = 0;
+        // compiler will wrong optimize " (bool*)&src1 ", because it is undefined
+        for (int i = 0; i < 4; i++) {
+          if (src1 & (mask << (i * 8))) {
+            result |= (1 << i);
+          }
+          if (src2 & (mask << (i * 8))) {
+            result |= (1 << (i + 4));
+          }
+        }
+        rddata[t].u32 = result;
+      }
+      rd_write = true;
     } break;
     default:
       std::abort();

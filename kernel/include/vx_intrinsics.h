@@ -261,6 +261,13 @@ inline int8_t vx_pack_bits(int32_t src1, int32_t src2) {
     return (int8_t)ret;
 }
 
+inline int32_t vx_pack_vec(int32_t addr, int32_t size) {
+    int32_t ret;
+    // vx_printf("vx_pack_vec: addr=%d, size=%d\n", addr, size);
+    __asm__ volatile(".insn r 0x0B, 0x2, 0x02, %0, %1, %2" : "=r"(ret) : "r"(addr), "r"(size));
+    return ret;
+}
+
 #ifdef __cplusplus
 }
 #endif

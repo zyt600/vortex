@@ -103,7 +103,7 @@ void cleanup() {
 
 int main(int argc, char *argv[]) {
   assert(WORK_LOAD_PER_THREAD % 8 == 0);
-
+  printf("WORK_LOAD_PER_THREAD=%d\n", WORK_LOAD_PER_THREAD);
   // parse command arguments
   parse_args(argc, argv);
 
@@ -119,11 +119,8 @@ int main(int argc, char *argv[]) {
   std::vector<char> tensor(tensor_element_num);
   std::vector<char> packed_tensor(packed_tensor_ele_num);
 
-  #ifdef WORK_LOAD_PER_THREAD
-  kernel_arg.grid_dim[0] = (packed_tensor_ele_num + WORK_LOAD_PER_THREAD-1) / WORK_LOAD_PER_THREAD;
-  #else
-  kernel_arg.grid_dim[0] = packed_tensor_ele_num;
-  #endif
+  kernel_arg.grid_dim[0] = (tensor_element_num + WORK_LOAD_PER_THREAD-1) / WORK_LOAD_PER_THREAD;
+
   printf("kernel_arg.grid_dim[0]=%d\n", kernel_arg.grid_dim[0]);
 
 
@@ -142,7 +139,8 @@ int main(int argc, char *argv[]) {
 
   // generate source data
   for (uint32_t i = 0; i < tensor_element_num; ++i) {
-    tensor[i] = (rand() % 2)==0;
+    // tensor[i] = (rand() % 2)==0;
+    tensor[i] = (i % 2)==0;
   }
 
   // upload tensor buffer
