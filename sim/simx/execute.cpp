@@ -1578,6 +1578,7 @@ void Emulator::execute(const Instr &instr, uint32_t wid, instr_trace_t *trace) {
           }
           rddata[t].u32 = result;
         }
+        rd_write = true;
       } break;
       case 2: { // PACK_VEC
         trace->fu_type = FUType::ALU;
